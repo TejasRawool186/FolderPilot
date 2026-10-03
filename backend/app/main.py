@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from app.config import settings
 from app.database import init_db, get_db, query_all, query_one
-from app.folder_browser import browse_directory, is_path_protected
+from app.folder_browser import browse_directory, is_path_protected, open_native_folder_dialog
 from app.scanner import scan_workspace_worker, scan_jobs
 from app.chaos_score import compute_chaos_score
 from app.planner import generate_plan, calculate_dry_run, apply_plan
@@ -81,6 +81,15 @@ def health_check():
 def browse_fs(path: Optional[str] = Query(None)):
     """Server-side folder browser (FR-01, FR-02)."""
     return browse_directory(path)
+
+@app.api_route("/fs/browse-dialog", methods=["GET", "POST"])
+def browse_fs_dialog(initial_path: Optional[str] = Query(None)):
+    """Opens native Windows folder picker dialog (like in VS Code) and returns selected path."""
+    selected = open_native_folder_dialog(initial_path)
+    if selected:
+        return {"status": "selected", "path": selected}
+    return {"status": "cancelled", "path": None}
+
 
 @app.api_route("/fs/file", methods=["GET", "HEAD"])
 def get_fs_file(path: str = Query(...)):

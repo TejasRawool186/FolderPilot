@@ -5,6 +5,13 @@ export async function fetchBrowse(path = '') {
   return res.json();
 }
 
+export async function openNativeFolderDialog(initialPath = '') {
+  const url = initialPath ? `/fs/browse-dialog?initial_path=${encodeURIComponent(initialPath)}` : '/fs/browse-dialog';
+  const res = await fetch(url, { method: 'POST' });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function createWorkspace(path, readOnly = false) {
   const res = await fetch('/workspaces', {
     method: 'POST',

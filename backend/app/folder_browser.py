@@ -116,3 +116,74 @@ def browse_directory(target_path_str: Optional[str] = None) -> Dict[str, Any]:
         "items": items,
         "drives": drives
     }
+
+def open_native_folder_dialog(initial_dir: Optional[str] = None) -> Optional[str]:
+    """
+    Opens the native Windows File Explorer 'Select Folder' dialog (similar to VS Code)
+    and returns the selected folder path, or None if cancelled.
+    """
+    import subprocess
+
+    # 1. On Windows, use PowerShell with FolderBrowserDialog (AutoUpgradeEnabled = true for modern File Explorer UI)
+    if sys.platform == "win32":
+        safe_init = (initial_dir or "").replace("'", "''")
+        ps_script = f"""
+[System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") | Out-Null
+$dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+$dialog.Description = "Select Workspace Folder - FolderPilot"
+$dialog.ShowNewFolderButton = $true
+$dialog.AutoUpgradeEnabled = $true
+$init = '{safe_init}'
+if ($init -and (Test-Path $init)) {{
+    $dialog.SelectedPath = $init
+}}
+$dummyForm = New-Object System.Windows.Forms.Form
+$dummyForm.TopMost = $true
+$result = $dialog.ShowDialog($dummyForm)
+if ($result -eq [System.Windows.Forms.DialogResult]::OK) {{
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    [Console]::WriteLine($dialog.SelectedPath)
+}}
+"""
+        try:
+            res = subprocess.run(
+                ["powershell", "-NoProfile", "-NonInteractive", "-Command", ps_script],
+                capture_output=True,
+                text=True,
+                timeout=180
+            )
+            out = res.stdout.strip()
+            if out and os.path.isdir(out):
+                return out
+        except Exception:
+            pass
+
+    # 2. Tkinter fallback
+    try:
+        py_code = """
+import sys, os
+import tkinter as tk
+from tkinter import filedialog
+root = tk.Tk()
+root.withdraw()
+root.attributes('-topmost', True)
+init_dir = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] else None
+folder = filedialog.askdirectory(title="Select Workspace Folder - FolderPilot", initialdir=init_dir)
+root.destroy()
+if folder:
+    print(folder, end='')
+"""
+        res = subprocess.run(
+            [sys.executable, "-c", py_code, initial_dir or ""],
+            capture_output=True,
+            text=True,
+            timeout=180
+        )
+        out = res.stdout.strip()
+        if out and os.path.isdir(out):
+            return out
+    except Exception:
+        pass
+
+    return None
+

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Folder, HardDrive, ArrowUp, ChevronRight, ShieldAlert, Check, Lock } from 'lucide-react';
-import { fetchBrowse, createWorkspace } from '../api';
+import { X, Folder, HardDrive, ArrowUp, ChevronRight, ShieldAlert, Check, Lock, FolderOpen } from 'lucide-react';
+import { fetchBrowse, createWorkspace, openNativeFolderDialog } from '../api';
 
 export default function FolderPickerModal({ isOpen, onClose, onSelectWorkspace }) {
   const [browseData, setBrowseData] = useState(null);
@@ -10,6 +10,7 @@ export default function FolderPickerModal({ isOpen, onClose, onSelectWorkspace }
   const [error, setError] = useState(null);
   const [customPath, setCustomPath] = useState('');
   const [readOnly, setReadOnly] = useState(false);
+  const [isNativeBrowsing, setIsNativeBrowsing] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -28,6 +29,22 @@ export default function FolderPickerModal({ isOpen, onClose, onSelectWorkspace }
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleNativeBrowse() {
+    try {
+      setIsNativeBrowsing(true);
+      setError(null);
+      const res = await openNativeFolderDialog(customPath);
+      if (res && res.status === 'selected' && res.path) {
+        setCustomPath(res.path);
+        await loadDirectory(res.path);
+      }
+    } catch (err) {
+      setError(err.message || 'Could not open native Windows folder dialog');
+    } finally {
+      setIsNativeBrowsing(false);
     }
   }
 
@@ -106,8 +123,20 @@ export default function FolderPickerModal({ isOpen, onClose, onSelectWorkspace }
             className="flex-1 bg-page-ink border border-graphite rounded-md px-3 py-1.5 text-xs text-snow focus:outline-none focus:border-blue-cornflower font-mono"
           />
           <button
+            type="button"
+            onClick={handleNativeBrowse}
+            disabled={isNativeBrowsing}
+            className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-snow hover:bg-slate-200 text-page-ink text-xs font-semibold rounded-md transition-colors disabled:opacity-50 shrink-0"
+            title="Browse with native Windows File Explorer dialog (like in VS Code)"
+          >
+            <FolderOpen className={`w-3.5 h-3.5 ${isNativeBrowsing ? 'animate-pulse' : ''}`} />
+            <span>{isNativeBrowsing ? 'Browsing...' : 'Browse...'}</span>
+          </button>
+          <button
+            type="button"
             onClick={() => loadDirectory(customPath)}
-            className="px-3.5 py-1.5 bg-card-carbon hover:bg-deep-coal text-snow text-xs font-medium rounded-md border border-steel-border"
+            className="px-2.5 py-1.5 bg-card-carbon hover:bg-deep-coal text-ash hover:text-snow text-xs font-medium rounded-md border border-steel-border shrink-0"
+            title="Load entered path (or press Enter)"
           >
             Load
           </button>

@@ -23,3 +23,13 @@ def test_browse_directory(tmp_path):
     names = [item["name"] for item in result["items"]]
     assert "SubFolderA" in names
     assert "SubFolderB" in names
+
+def test_browse_dialog(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app
+    monkeypatch.setattr("app.main.open_native_folder_dialog", lambda initial_path=None: "C:/TestFolder")
+    client = TestClient(app)
+    res = client.post("/fs/browse-dialog")
+    assert res.status_code == 200
+    assert res.json() == {"status": "selected", "path": "C:/TestFolder"}
+
