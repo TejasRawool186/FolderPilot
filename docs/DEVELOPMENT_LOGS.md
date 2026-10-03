@@ -6,14 +6,14 @@ This document consolidates the engineering roadmap, architectural decisions, and
 
 ## 1. Project Inception & Goals
 
-FolderPilot was conceived to solve the universal desktop problem of digital chaos—messy download folders, disorganized projects, and cluttered workspaces—without the privacy risks of cloud uploaders or the catastrophic dangers of destructive auto-cleanup tools.
+FolderPilot was conceived to solve the desktop problem of digital clutter—messy download folders, disorganized projects, and cluttered workspaces—without the privacy risks of cloud uploaders or the dangers of destructive auto-cleanup tools.
 
 ### Key Requirements
-- **100% Non-Destructive**: Absolutely zero `unlink`, `remove`, `delete`, or truncation code paths.
+- **Non-Destructive**: Zero `unlink`, `remove`, `delete`, or truncation code paths exist in the application.
 - **Atomic Journaling & Rollback**: Every file move or rename is recorded in an append-only transaction journal before disk execution.
-- **Deterministic Auto-Suffixing**: Name collisions are automatically resolved (`file (1).ext`) to ensure zero overwrite risks.
-- **Hardware-Friendly**: Designed to run smoothly on standard consumer hardware (AMD Ryzen 3, 8 GB RAM, CPU-only).
-- **Local AI Intelligence**: Powered by Ollama and Qwen 2.5 (1.5B) for privacy-preserving classification, summarization, and chat.
+- **Deterministic Auto-Suffixing**: Name collisions are automatically resolved (`file (1).ext`) to ensure files are never overwritten.
+- **Hardware-Friendly**: Designed to run smoothly on standard consumer hardware (multi-core CPU, 8 GB RAM, no GPU required).
+- **Local AI Intelligence**: Powered by Ollama with on-device models (defaulting to Gemma 3 1B with fallback to Qwen 2.5 1.5B) for privacy-preserving classification, summarization, and chat.
 
 ---
 
@@ -21,7 +21,7 @@ FolderPilot was conceived to solve the universal desktop problem of digital chao
 
 ### Phase 1: Specifications & Safety Guardrails
 - Analyzed complete Software Requirements Specification (383 rules covering FR-01 through FR-103).
-- Established 5 Ironclad Invariants (Zero Delete, Auto-Suffixing, Explicit User Gate, 100% Reversible Journaling, Air-Gapped Privacy).
+- Established core invariants (Zero Delete, Auto-Suffixing, Explicit User Gate, Reversible Journaling, Local-Only Privacy).
 
 ### Phase 2: Backend Core (FastAPI + SQLite WAL)
 - Created SQLite database schema with ACID transaction support.
@@ -39,10 +39,11 @@ FolderPilot was conceived to solve the universal desktop problem of digital chao
 - **DaisyDisk Sunburst View**: Multi-ring concentric polar chart with real-time radial radar HUD.
 - **Before & After Tree Comparison**: Split-tree visualizer showing proposed changes side-by-side.
 - **Chaos Score Metric**: Algorithmic disorder score (0 to 100) computing entropy, root-level pollution, and duplicate ratios with real-time slider interpolation.
-- **In-App Multi-Format File Previewer**: Supports high-res images, video, audio streaming, dual-mode PDF viewer, formatted Word/PowerPoint document reader, CSV tabular grid, and low-level hex dump viewer.
+- **In-App Multi-Format File Previewer**: Supports images, video, audio streaming, dual-mode PDF viewer, formatted Word/PowerPoint document reader, CSV tabular grid, and low-level hex dump viewer.
 - **Command Palette (`Ctrl+K`)**: Instant search with realtime treemap spotlight highlighting.
+- **WanderingEyes Scanning State**: Animated center discovery state with live progress bar and cancellation.
 
 ### Phase 4: Quality Assurance & Audit
-- Developed comprehensive test suite (18 unit and integration tests passing).
+- Developed automated test suite (19 unit and integration tests passing).
 - Verified zero-delete code paths and path traversal protection.
-- Verified Next.js Turbopack build passes with zero TypeScript/syntax errors.
+- Verified Next.js Turbopack build passes with zero errors.

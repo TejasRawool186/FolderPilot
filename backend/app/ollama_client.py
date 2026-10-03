@@ -30,9 +30,10 @@ class OllamaClient:
                 # Find matching or fallback model
                 active_model = target_model
                 if not has_target and models:
-                    # look for any qwen model first
+                    # look for gemma model first, then qwen, then first installed model
+                    gemma_matches = [m for m in models if "gemma" in m.lower()]
                     qwen_matches = [m for m in models if "qwen" in m.lower()]
-                    active_model = qwen_matches[0] if qwen_matches else models[0]
+                    active_model = gemma_matches[0] if gemma_matches else (qwen_matches[0] if qwen_matches else models[0])
                 
                 return {
                     "available": True,

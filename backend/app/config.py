@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     # Ollama settings
     OLLAMA_BASE_URL: str = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
     OLLAMA_EMBED_MODEL: str = os.environ.get("OLLAMA_EMBED_MODEL", "nomic-embed-text")
-    OLLAMA_LLM_MODEL: str = os.environ.get("OLLAMA_LLM_MODEL", "qwen2.5:1.5b")
+    OLLAMA_LLM_MODEL: str = os.environ.get("OLLAMA_LLM_MODEL", "gemma3:1b")
     
     # Scan & Safety limits
     MAX_FILE_SIZE_EXTRACT: int = 50 * 1024 * 1024  # 50MB max for text extraction

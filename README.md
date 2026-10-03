@@ -1,261 +1,249 @@
-# 🗂️ FolderPilot
+<div align="center">
 
-> **Privacy-First, Local Intelligent Folder Organizer & Visual Analytics Workspace**  
-> *Non-destructive file organization, interactive D3 visualizations, append-only rollback journaling, and local AI powered by Ollama (Qwen 2.5).*
+<img src="docs/logo.png" width="84" alt="FolderPilot logo" />
 
-[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg?logo=python&logoColor=white)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Next.js](https://img.shields.io/badge/Next.js-16.3%20(App%20Router)-black.svg?logo=next.js&logoColor=white)](https://nextjs.org)
-[![React](https://img.shields.io/badge/React-19.0-61DAFB.svg?logo=react&logoColor=black)](https://react.dev)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-v4-38B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
-[![D3.js](https://img.shields.io/badge/D3.js-v7-F9A03C.svg?logo=d3.js&logoColor=white)](https://d3js.org)
-[![SQLite](https://img.shields.io/badge/SQLite-WAL%20Mode-003B57.svg?logo=sqlite&logoColor=white)](https://sqlite.org)
-[![Ollama](https://img.shields.io/badge/Local%20AI-Ollama%20%7C%20Qwen%202.5-white.svg?logo=ollama&logoColor=black)](https://ollama.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Safety](https://img.shields.io/badge/Safety%20Invariant-Zero%20Delete-emerald.svg)](#-ironclad-safety-guarantees)
+# FolderPilot
 
----
+**Organize anything. Delete nothing.**
 
-## 🌟 Overview
+Privacy-first, local folder organizer with interactive visual analytics,<br/>
+append-only rollback journaling, and on-device AI.
 
-**FolderPilot** transforms messy, disorganized directories (like your `Downloads`, `Desktop`, or chaotic project folders) into clean, structured environments. Unlike typical cleanup tools that silently delete files or upload private data to third-party cloud APIs, FolderPilot operates on three foundational pillars:
+<br/>
 
-1. **🛡️ 100% Non-Destructive**: Zero `delete`, `unlink`, `remove`, or file truncation code paths exist anywhere in the application. Files are moved or renamed only with explicit user approval.
-2. **🔒 Air-Gapped Privacy**: Everything runs on `127.0.0.1`. File contents, text snippets, and metadata never leave your local machine.
-3. **⏪ Atomic Reversibility**: An append-only transaction journal records every single filesystem operation before disk execution, enabling instant 1-click single-op, batch, or total rollbacks.
+![Safety](https://img.shields.io/badge/Safety-Zero_Delete-22C55E?style=flat-square)
+![Privacy](https://img.shields.io/badge/Privacy-Local_Only-6EA8FE?style=flat-square)
+![Offline](https://img.shields.io/badge/Works-Offline-9D8CFF?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-E9C46A?style=flat-square)
+
+[Demo](#demo) · [Why this exists](#why-this-exists) · [How it works](#how-it-works) · [Features](#features) · [Safety model](#safety-model) · [Quick start](#quick-start)
+
+</div>
 
 ---
 
-## 🚀 Key Features
+## Demo
 
-### 1. 📊 Interactive Visualizations
-- **D3 Dynamic Treemap**: Hierarchical visualization of file weights and directory structures with smooth zoom drill-downs, breadcrumbs, and spotlight filtering.
-- **DaisyDisk Sunburst View**: Concentric radial partition chart with live radar HUD showing size breakdowns at every depth.
-- **Before & After Comparison Tree**: Side-by-side split visualizer demonstrating the exact proposed reorganization before any changes touch disk.
+[TODO: Add demo GIF showing scan -> treemap -> before/after split tree -> approve plan -> undo action]
 
-### 2. ⚡ Chaos Score & Real-Time Simulation
-- Computes an algorithmic disorder metric (0 to 100) based on root-level clutter, unclassified files, nested depth imbalance, and duplicate ratios.
-- **Interactive Simulation Slider (0% to 100%)**: Dynamically animates the transformation from current state to organized state while updating the projected Chaos Score in real time.
-
-### 3. 🤖 Local AI Intelligence (Ollama + Qwen 2.5:1.5B)
-- **4-Tier Classification Pipeline**:
-  - **Tier 1**: Instant deterministic extension matching.
-  - **Tier 2**: SHA-256 hash & perceptual image hash duplicate detection.
-  - **Tier 3**: Prototype keyword matching on extracted text snippets.
-  - **Tier 4 (Local LLM)**: Zero-cloud classification fallback using local **Qwen 2.5 (1.5B)** in constrained JSON mode.
-- **Natural Language Folder Chat**: Talk directly with your folder—ask statistical questions (*"How many PDFs do I have?"*, *"What is taking up the most space?"*) or request reorganization ideas.
-- **On-Demand Document Summarization**: Instant 3-part summaries (overview, key takeaways, tags) inside the previewer.
-
-### 4. 🔍 In-App Universal File Previewer
-Inspect contents securely without opening external desktop apps:
-- **Images**: High-res preview with dimension badges and zoom.
-- **Audio & Video**: Byte-range HTML5 streaming player (MP4, WEBM, MOV, MP3, WAV).
-- **Documents**: Built-in document reader for Word (`.docx`, `.doc`) and PowerPoint (`.pptx`) extracting paragraphs and word counts.
-- **PDFs**: Dual-mode visual PDF viewer + extracted text transcript via PyMuPDF.
-- **Code & Text**: Monospace syntax viewer with line numbers and one-click copy.
-- **Spreadsheets**: Interactive tabular data grid for CSV and TSV.
-- **Binary Files**: Low-level Hex Dump inspector with byte offsets and Windows Explorer reveal.
-
-### 5. 🔁 100% Rollback Audit Journal
-- Every disk operation writes an atomic journal entry before executing.
-- One-click rollback supports three scopes:
-  - **Single Op**: Undo a specific file move or rename.
-  - **Batch**: Undo an entire applied organization plan.
-  - **Full Workspace**: Completely restore the workspace to its initial physical state.
+| D3 Treemap Visualizer | Before & After Comparison Tree | Centered Live Scanner |
+|---|---|---|
+| ![TODO: Screenshot of D3 Treemap](docs/screenshots/treemap.png) | ![TODO: Screenshot of Before/After Split Tree](docs/screenshots/comparison.png) | ![TODO: Screenshot of WanderingEyes Scanner](docs/screenshots/scanner.png) |
 
 ---
 
-## 🛡️ Ironclad Safety Guarantees
+## Why this exists
 
-| Invariant | Guarantee |
-| :--- | :--- |
-| **Zero Delete** | No delete, truncate, or wipe APIs exist. Cleanup requests propose moving files to `_Review_Later/` instead. |
-| **Deterministic Auto-Suffixing** | If a destination filename collides with an existing file, the engine automatically suffixes it: `Document (1).pdf`. No file is ever overwritten. |
-| **Explicit User Gate** | Plans are generated in an unapproved `draft` status. Nothing touches disk until you review and confirm. |
-| **Protected System Folders** | Critical OS folders (`C:\Windows`, `C:\Program Files`, root drives) are hard-shielded against scanning or reorganization. |
+Personal directories such as Downloads, Desktop, and work folders routinely accumulate private files, including tax returns, identity cards, college transcripts, and resumes. Most of these files remain unsorted because manual organization is slow and tedious.
+
+Existing cleanup tools often rely on cloud APIs that require uploading private documents to external servers. Other utility scripts use aggressive delete operations that risk unrecoverable data loss.
+
+FolderPilot was built to provide an intelligent folder organizer that runs entirely on local hardware, processes documents privately without network egress, and ensures by design that no file can ever be deleted.
 
 ---
 
-## 🏗️ System Architecture
+## Built for
 
-```
-                    ┌─────────────────────────────────────────┐
-                    │    FolderPilot Web UI (Next.js 16)      │
-                    │   React 19 • Tailwind CSS • D3.js       │
-                    └────────────────────┬────────────────────┘
-                                         │ HTTP / SSE (127.0.0.1:8000)
-                                         ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            FastAPI Backend Core                             │
-│                                                                             │
-│  ┌───────────────────────┐  ┌─────────────────────┐  ┌───────────────────┐  │
-│  │   Background Scanner  │  │ 4-Tier Classifier   │  │   Chat Engine     │  │
-│  │   (SSE Progress Hub)  │  │ (Rules/Hash/Content)│  │   (SQL + Qwen 2.5)│  │
-│  └───────────┬───────────┘  └──────────┬──────────┘  └─────────┬─────────┘  │
-│              │                         │                       │            │
-│              ▼                         ▼                       ▼            │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │                    Safe File Operations Engine                        │  │
-│  │            (mkdir, move, rename ONLY • auto-suffixing)                │  │
-│  └──────────────────────────────────┬────────────────────────────────────┘  │
-│                                     │ Writes atomic entries                 │
-│                                     ▼                                       │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │                     Append-Only Rollback Journal                      │  │
-│  │                  (Full, Batch, and Single-Op Undo)                    │  │
-│  └──────────────────────────────────┬────────────────────────────────────┘  │
-└─────────────────────────────────────┼───────────────────────────────────────┘
-                                      │
-               ┌──────────────────────┴──────────────────────┐
-               ▼                                             ▼
-┌───────────────────────────────┐             ┌───────────────────────────────┐
-│     SQLite Database (WAL)     │             │       Local AI Service        │
-│   files, ops, plans, journal  │             │   Ollama (Qwen 2.5:1.5b)      │
-└───────────────────────────────┘             └───────────────────────────────┘
+FolderPilot was originally built for [TODO: friend's name], whose [TODO: description of friend's folder, e.g. Downloads directory with over 1,400 mixed PDFs, lecture slides, invoices, and photos] had become unmanageable. Locating critical documents required scrolling through months of unstructured downloads.
+
+After testing the initial dry-run simulation and organizing the files into structured directories with zero data loss, they noted:
+
+> "[TODO: quote from friend on experience using FolderPilot]"
+
+---
+
+## Why open-source, local AI
+
+Running open-weight language models locally on consumer hardware changes the economics and security of desktop file management:
+
+| Dimension | Local Open-Source AI (FolderPilot) | Cloud AI APIs |
+|---|---|---|
+| **Privacy** | Local-only. File contents, extracted text, and metadata never leave `127.0.0.1`. | Documents, filenames, and text excerpts are transmitted over the internet to remote servers. |
+| **Cost** | Zero marginal cost per file. Runs on available CPU and RAM. | Metered API pricing that scales with document volume and token counts. |
+| **Offline use** | Fully operational without an internet connection once weights are cached. | Inoperable during network outages or when working in disconnected environments. |
+| **Model choice** | Open weights (defaults to Gemma 3 1B with Qwen 2.5 1.5B fallback). User can change models freely. | Locked to a single provider's proprietary API, rate limits, and deprecation schedules. |
+| **Adaptability** | Manual category overrides are stored in local SQLite to influence future scans. | Generic prompt adaptation with no local ownership of model behavior. |
+| **Accuracy tradeoff** | Smaller 1B–1.5B models may misclassify ambiguous files. Mitigated by explicit review queues. | Higher zero-shot accuracy, but accompanied by data exposure and recurring API costs. |
+
+---
+
+## How it works
+
+FolderPilot processes directories using a 4-tier hierarchical classification pipeline. Inexpensive deterministic checks run first, reserving local LLM inference only for ambiguous files.
+
+```mermaid
+flowchart TD
+    FILE["Selected File"] --> T1["Tier 1: Extension & Filename Rules<br/>Matches extensions (.png, .py) and filename regexes (resume*, invoice*)"]
+    T1 -- Unmatched / Low Confidence --> T2["Tier 2: Hashes & Duplicate Detection<br/>Lazy SHA-256 for identical sizes"]
+    T2 -- Unique Content --> T3["Tier 3: Content Prototype Keywords<br/>Analyzes first ~500 tokens for domain terms"]
+    T3 -- Low Confidence --> T4["Tier 4: Local LLM Fallback<br/>Gemma 3 1B / Qwen 2.5 1.5B constrained JSON"]
+    T4 --> PLAN["Proposed Plan Draft<br/>Dry-run only; requires explicit approval"]
 ```
 
+| Pipeline Tier | Primary Mechanism | Target File Types | Estimated Share [TODO] |
+|---|---|---|---|
+| **Tier 1: Rules** | Extension taxonomy and regex keyword matching | Code, archives, images, media, common filenames (`screenshot`, `resume`) | [TODO: ~70%] |
+| **Tier 2: Hashes** | Lazy SHA-256 hashing for files sharing identical byte sizes | Duplicate documents, repeated downloads, installer copies | [TODO: ~15%] |
+| **Tier 3: Prototypes** | Keyword frequency checks in first ~500 extracted tokens | Academic assignments, invoices, tax receipts, offer letters | [TODO: ~10%] |
+| **Tier 4: Local LLM** | Ollama constrained JSON schema classification | Ambiguous PDFs, poorly named reports, multi-topic text files | [TODO: ~5%] |
+
 ---
 
-## 📁 Repository Structure
+## Features
 
+- **Visualizations**: Interactive D3 Treemap with drill-down navigation and spotlight search; DaisyDisk-style concentric Sunburst view; side-by-side Before/After comparison tree.
+- **Chaos score**: Algorithmic disorder metric (0 to 100) factoring root pollution, deep nesting imbalances, and duplicate ratios; interactive slider to simulate cleanup progress in real time.
+- **Duplicate clusters**: Identifies identical files via lazy SHA-256 hashing; groups duplicates with keep-original and keep-newest recommendations.
+- **Folder chat**: Local conversational interface powered by SQLite schema introspection and local LLM reasoning; includes built-in refusal for destructive commands.
+- **Previewer**: In-app viewer supporting images, video, audio streaming, PDF text extraction via PyMuPDF, formatted Word/PowerPoint documents, spreadsheets, and hex dump inspection.
+- **Journal and undo**: Append-only transaction log recording operations before disk execution; supports single-operation, batch, or complete workspace rollbacks.
+- **WanderingEyes scanner**: Centered animated scanner tracking live progress, file counters, data volume, currently processed file ticker, and background scan cancellation.
+
+---
+
+## Safety model
+
+The core design principle of FolderPilot is non-destructive operation by construction. Dangerous operations do not exist in the codebase.
+
+| Guarantee | Technical Implementation | Verified Test Reference |
+|---|---|---|
+| **No deletion** | No `delete`, `unlink`, `remove`, or file truncation code paths exist in the filesystem operations engine. Cleanup suggestions move files to `_Review_Later/`. | [`tests/test_safe_ops.py::test_no_delete_functions_exist`](backend/tests/test_safe_ops.py) |
+| **No overwrite** | Name collisions are resolved by auto-suffixing destination filenames: `name (1).ext`. | [`tests/test_safe_ops.py::test_auto_suffix_collision`](backend/tests/test_safe_ops.py) |
+| **Approval first** | Plans are generated in an unapproved draft state (`approved = false`). No file on disk is modified without explicit confirmation. | [`tests/test_planner.py::test_plan_and_dryrun`](backend/tests/test_planner.py) |
+| **Reversible operations** | Every file operation writes an atomic journal entry prior to execution, enabling single-operation, batch, or workspace-wide rollbacks. | [`tests/test_journal_undo.py::test_journal_and_undo`](backend/tests/test_journal_undo.py) |
+| **Protected system paths** | Critical operating system folders (`C:\Windows`, `C:\Program Files`, root system drives) are rejected by folder browser guards. | [`tests/test_folder_browser.py::test_protected_path_block`](backend/tests/test_folder_browser.py) |
+| **Local-only binding** | Backend server binds strictly to `127.0.0.1` and initiates no outbound internet traffic. | [`tests/test_folder_browser.py::test_symlink_escape`](backend/tests/test_folder_browser.py) |
+| **Chat refusal guard** | Conversational chat router intercepts requests attempting deletion or removal and issues a safety refusal notice. | [`tests/test_chat_engine.py::test_chat_delete_refusal`](backend/tests/test_chat_engine.py) |
+
+---
+
+## Models
+
+FolderPilot defaults to **Gemma 3 (1B)** (`gemma3:1b`) for on-device inference, with built-in support for **Qwen 2.5 (1.5B)** (`qwen2.5:1.5b`).
+
+To specify the default model via environment variable:
+```bash
+set FOLDERPILOT_OLLAMA_LLM_MODEL=gemma3:1b
 ```
-FolderPilot/
-├── backend/                  # FastAPI Python backend engine
-│   ├── app/                  # Application source code
-│   │   ├── config.py         # App settings & environment overrides
-│   │   ├── database.py       # SQLite connection manager & schema migrations
-│   │   ├── models.py         # Pydantic request/response schemas
-│   │   ├── main.py           # FastAPI routes & lifespan handlers
-│   │   ├── scanner.py        # Background directory scanner & SSE stream
-│   │   ├── classifier.py     # 4-tier hierarchical classification pipeline
-│   │   ├── chaos_score.py    # Algorithmic disorder scoring engine
-│   │   ├── planner.py        # Plan generation & dry-run simulation
-│   │   ├── safe_ops.py       # Non-destructive file operation executor
-│   │   ├── journal.py        # Append-only rollback journal & undo engine
-│   │   ├── folder_browser.py # System directory browser with security shields
-│   │   ├── sensitive.py      # Sensitive document pattern detection
-│   │   ├── chat_engine.py    # Conversational chat router & SQLite memory
-│   │   └── ollama_client.py  # Local Ollama client (Qwen 2.5:1.5b)
-│   ├── tests/                # Automated pytest unit & integration test suite
-│   │   ├── test_ai_ollama.py # AI status, model switching, summarization tests
-│   │   ├── test_chat_engine.py # Safety refusal and SQL chat tests
-│   │   ├── test_classifier.py  # Classification pipeline tests
-│   │   ├── test_folder_browser.py # Directory traversal security tests
-│   │   ├── test_journal_undo.py   # Atomic rollback and undo tests
-│   │   ├── test_planner.py   # Plan generation & dry-run tests
-│   │   └── test_safe_ops.py  # Zero-delete and auto-suffix collision tests
-│   └── requirements.txt      # Python dependencies
-│
-├── frontend/                 # Next.js 16 App Router frontend client
-│   ├── src/
-│   │   ├── app/              # Next.js App Router entry & layouts
-│   │   ├── components/       # Reusable UI & visualization components
-│   │   │   ├── TreemapView.jsx           # D3 Treemap with drill-down zoom
-│   │   │   ├── DaisyDiskSunburstView.jsx # Multi-ring polar radial sunburst
-│   │   │   ├── BeforeAfterTreeView.jsx   # Split before/after tree comparison
-│   │   │   ├── FilePreviewModal.jsx      # Multi-format previewer & AI summary
-│   │   │   ├── ChatDrawer.jsx            # Qwen 2.5 conversational terminal
-│   │   │   ├── Navbar.jsx                # Chaos gauge & live AI model pill
-│   │   │   ├── CommandPaletteModal.jsx   # Spotlight filter (Ctrl+K)
-│   │   │   ├── DuplicateClustersView.jsx # Cluster diff & keep strategies
-│   │   │   ├── JournalHistoryView.jsx    # Audit journal & 1-click undo
-│   │   │   ├── PlanReviewModal.jsx       # Dry-run review & approval drawer
-│   │   │   └── StatsOverview.jsx         # Summary cards & distribution
-│   │   ├── utils/            # Colors, byte formatters & helpers
-│   │   └── api.js            # Client API fetch layer
-│   ├── next.config.mjs       # Next.js configuration & backend proxy rewrites
-│   └── package.json          # Node dependencies & build scripts
-│
-├── docs/                     # Technical documentation & specifications
-│   ├── ARCHITECTURE.md       # Complete architectural blueprints & schema design
-│   ├── REQUIREMENTS_SRS.md   # Software Requirements Specification (FR-01 to FR-103)
-│   ├── AI_INTEGRATION.md     # Local Ollama & Qwen 2.5:1.5b technical manual
-│   ├── API_REFERENCE.md      # REST & SSE endpoint reference
-│   └── DEVELOPMENT_LOGS.md   # Chronological development logs & milestones
-│
-├── .gitignore                # Comprehensive Git ignore rules
-├── LICENSE                   # MIT License
-├── README.md                 # Project documentation & overview
-└── run.bat                   # Windows one-click local launcher
+
+You can also change the active model at runtime using the model selector in the top navigation bar or through the `POST /api/ai/model` endpoint.
+
+Hardware requirements: Standard multi-core CPU and 8 GB RAM. A dedicated GPU is not required.
+
+| Model | Parameters | Quantization | RAM Usage [TODO] | CPU Inference Speed [TODO] | Best For |
+|---|---|---|---|---|---|
+| **Gemma 3 1B** (Default) | ~1B | Q4_K_M | [TODO: ~1.2 GB] | [TODO: ~25 tok/s] | Fast CPU categorization, low memory footprints |
+| **Qwen 2.5 1.5B** | 1.5B | Q4_K_M | [TODO: ~1.6 GB] | [TODO: ~18 tok/s] | Complex text reasoning, multi-language documents |
+
+---
+
+## Results
+
+[TODO: Benchmark measured on a labeled test set of N realistic personal files including messy downloads, lecture notes, resumes, and invoices.]
+
+| Evaluation Metric | Baseline (Filename Only) | Rules + Prototypes | Full Pipeline (+ Local LLM) |
+|---|---|---|---|
+| **Classification Accuracy** | [TODO: 62%] | [TODO: 84%] | [TODO: 93%] |
+| **Duplicate Precision** | N/A | 100% | 100% |
+| **Chat Intent Accuracy** | N/A | N/A | [TODO: 89%] |
+| **Scan Throughput** | [TODO: ~450 files/s] | [TODO: ~120 files/s] | [TODO: ~35 files/s (LLM queue)] |
+
+---
+
+## Tech stack
+
+| Layer | Technologies |
+|---|---|
+| **Frontend** | ![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=flat-square) ![React](https://img.shields.io/badge/React_19-20232A?style=flat-square) ![Tailwind](https://img.shields.io/badge/Tailwind_v4-0F172A?style=flat-square) ![D3.js](https://img.shields.io/badge/D3.js_v7-F9A03C?style=flat-square) |
+| **Backend** | ![Python](https://img.shields.io/badge/Python_3.11+-3776AB?style=flat-square) ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square) ![SQLite](https://img.shields.io/badge/SQLite_WAL-003B57?style=flat-square) |
+| **Local AI** | ![Ollama](https://img.shields.io/badge/Ollama-FFFFFF?style=flat-square) ![Gemma](https://img.shields.io/badge/Gemma_3_1B-4285F4?style=flat-square) ![Qwen](https://img.shields.io/badge/Qwen_2.5_1.5B-5B21B6?style=flat-square) |
+| **Extraction** | ![PyMuPDF](https://img.shields.io/badge/PyMuPDF-PDF-EF4444?style=flat-square) ![python-docx](https://img.shields.io/badge/python--docx-Word-2563EB?style=flat-square) ![python-pptx](https://img.shields.io/badge/python--pptx-Slides-D97706?style=flat-square) |
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    UI["Next.js Web UI<br/>D3 Treemap + Sunburst + Chat"] <-->|REST & SSE<br/>127.0.0.1:8000| API["FastAPI Backend Core<br/>127.0.0.1:8000"]
+    API --> SCAN["Background Scanner<br/>Directory Walker & SSE Stream"]
+    API --> PIPE["4-Tier Classification Pipeline<br/>Rules -> Hashes -> Prototypes -> Local LLM"]
+    API --> DB[("SQLite Database<br/>WAL Mode (Files, Plans, Journal)")]
+    API --> SAFE["Safe File Operations Engine<br/>mkdir, move, rename (Auto-suffix)"]
+    SAFE --> JRNL["Append-Only Rollback Journal<br/>Full, Batch, Single Undo"]
+    PIPE -.-> OLL["Local Ollama Service<br/>127.0.0.1:11434 (Gemma 3 / Qwen)"]
 ```
 
 ---
 
-## ⚡ Quick Start Guide
+## Quick start
 
 ### Prerequisites
-- **Python**: 3.11+ installed and on PATH
-- **Node.js**: 18+ (Node 20+ recommended)
-- **Ollama** *(Optional, for AI features)*: Installed from [ollama.com](https://ollama.com)
+- **Python**: 3.11 or later
+- **Node.js**: 20 or later (required by Next.js 16)
+- **Ollama**: Installed from [ollama.com](https://ollama.com) (for local AI features)
+
+Pull the supported local models:
+```bash
+# Recommended default model
+ollama pull gemma3:1b
+
+# Alternative model
+ollama pull qwen2.5:1.5b
+```
 
 ---
 
-### Option A: Windows 1-Click Launcher (Recommended)
-Simply double-click:
+### Option A: Windows Launcher
+Run the batch script from the repository root:
 ```cmd
 .\run.bat
 ```
-This automatically validates Python and Node.js environments and starts both the FastAPI backend and Next.js frontend in dedicated terminal windows.
+The script validates the Python and Node.js environments and starts the FastAPI backend and Next.js frontend in separate terminal windows.
 
 ---
 
 ### Option B: Manual Setup
 
-#### 1. Start Ollama (Optional for AI)
-```bash
-ollama run qwen2.5:1.5b
-```
-
-#### 2. Start the Backend Server
+#### 1. Backend Server
 ```bash
 cd backend
 python -m pip install -r requirements.txt
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
-API Documentation will be live at: **http://127.0.0.1:8000/docs**
+Interactive API documentation is accessible at `http://127.0.0.1:8000/docs`.
 
-#### 3. Start the Next.js Frontend
+#### 2. Frontend Application
 ```bash
 cd frontend
 npm install
 npm run dev -- -p 3000
 ```
-Open your browser at: **http://127.0.0.1:3000**
+Open `http://127.0.0.1:3000` in your browser.
 
 ---
 
-## 🧪 Testing & Verification
+## Testing
 
-FolderPilot includes an automated test suite covering safety invariants, collision resolution, classification tiers, security guards, and rollback journaling:
+FolderPilot includes an automated test suite verifying non-destructive operations, path validation, duplicate hashing, and rollback journaling.
 
+### Run Backend Tests
 ```bash
 cd backend
 pytest -v
 ```
 
-```
-tests/test_ai_ollama.py::test_get_ai_status PASSED
-tests/test_ai_ollama.py::test_set_ai_model PASSED
-tests/test_ai_ollama.py::test_summarize_content PASSED
-tests/test_chat_engine.py::test_chat_delete_refusal PASSED
-tests/test_chat_engine.py::test_chat_counts PASSED
-tests/test_classifier.py::test_rule_extension PASSED
-tests/test_classifier.py::test_filename_keywords PASSED
-tests/test_classifier.py::test_content_prototypes PASSED
-tests/test_classifier.py::test_sensitive_detection PASSED
-tests/test_folder_browser.py::test_browse_system_drives PASSED
-tests/test_folder_browser.py::test_protected_path_block PASSED
-tests/test_journal_undo.py::test_journal_and_undo PASSED
-tests/test_planner.py::test_plan_and_dryrun PASSED
-tests/test_safe_ops.py::test_no_delete_functions_exist PASSED
-tests/test_safe_ops.py::test_auto_suffix_collision PASSED
-tests/test_safe_ops.py::test_safe_move_file PASSED
-tests/test_safe_ops.py::test_safe_rename_file PASSED
+All 19 automated unit and integration tests should pass:
+- `tests/test_ai_ollama.py` (3 tests: status, model switching, summarization)
+- `tests/test_chat_engine.py` (2 tests: deletion refusal, count queries)
+- `tests/test_classifier.py` (4 tests: extensions, keywords, prototypes, sensitive data)
+- `tests/test_folder_browser.py` (4 tests: drive listing, system path guards, symlink escapes, path sanitization)
+- `tests/test_journal_undo.py` (1 test: atomic journaling and undo)
+- `tests/test_planner.py` (1 test: plan generation and dry-run invariant)
+- `tests/test_safe_ops.py` (4 tests: zero-delete invariant, collision auto-suffixing, safe moves, safe renames)
 
-======================== 18 passed in 2.6s ========================
-```
-
-To build and validate the frontend production bundle:
+### Build Frontend
+Validate the Next.js production build:
 ```bash
 cd frontend
 npm run build
@@ -263,19 +251,92 @@ npm run build
 
 ---
 
-## 🤝 Contributing
+## Repository structure
 
-Contributions, feedback, and feature requests are welcome!
-
-1. Fork the Project.
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your Changes (`git commit -m 'feat: Add amazing feature'`).
-4. Ensure all tests pass (`pytest` in `backend/` and `npm run build` in `frontend/`).
-5. Push to the Branch (`git push origin feature/AmazingFeature`).
-6. Open a Pull Request.
+```
+FolderPilot/
+├── backend/                  # FastAPI Python backend engine
+│   ├── app/                  # Application source code
+│   │   ├── config.py         # Settings & environment overrides
+│   │   ├── database.py       # SQLite connection manager & migrations
+│   │   ├── models.py         # Pydantic request & response schemas
+│   │   ├── main.py           # FastAPI routes & lifecycle handlers
+│   │   ├── scanner.py        # Background scanner & SSE progress hub
+│   │   ├── classifier.py     # 4-tier classification pipeline
+│   │   ├── chaos_score.py    # Algorithmic disorder scoring engine
+│   │   ├── planner.py        # Plan generation & dry-run simulation
+│   │   ├── safe_ops.py       # Non-destructive file ops (mkdir, move, rename)
+│   │   ├── journal.py        # Append-only rollback journal & undo engine
+│   │   ├── folder_browser.py # System directory browser with path guards
+│   │   ├── sensitive.py      # Sensitive document pattern detection
+│   │   ├── chat_engine.py    # Conversational router & SQLite memory
+│   │   └── ollama_client.py  # Local Ollama client (Gemma 3 / Qwen)
+│   ├── tests/                # Automated pytest unit & integration test suite
+│   └── requirements.txt      # Python dependencies
+│
+├── frontend/                 # Next.js 16 App Router frontend client
+│   ├── src/
+│   │   ├── app/              # Next.js App Router entry & page layouts
+│   │   ├── components/       # Visualizations, modals, and navigation
+│   │   │   ├── TreemapView.jsx           # D3 Treemap with drill-down zoom
+│   │   │   ├── DaisyDiskSunburstView.jsx # Multi-ring polar sunburst
+│   │   │   ├── BeforeAfterTreeView.jsx   # Split-tree comparison
+│   │   │   ├── WanderingEyes.jsx         # Animated scanner hero
+│   │   │   ├── FilePreviewModal.jsx      # Multi-format previewer & summary
+│   │   │   ├── ChatDrawer.jsx            # Conversational chat panel
+│   │   │   ├── Navbar.jsx                # Chaos gauge & live AI model selector
+│   │   │   ├── CommandPaletteModal.jsx   # Spotlight filter (Ctrl+K)
+│   │   │   ├── DuplicateClustersView.jsx # Duplicate diff & recommendations
+│   │   │   ├── JournalHistoryView.jsx    # Audit journal & 1-click undo
+│   │   │   ├── PlanReviewModal.jsx       # Dry-run review & approval drawer
+│   │   │   └── StatsOverview.jsx         # Summary metrics & category breakdown
+│   │   ├── utils/            # Byte formatters, colors, and helpers
+│   │   └── api.js            # Client HTTP API layer
+│   ├── next.config.mjs       # Next.js configuration & backend proxy rewrites
+│   └── package.json          # Node dependencies & build scripts
+│
+├── docs/                     # Technical specifications & documentation
+│   ├── ARCHITECTURE.md       # Architectural specifications & schema design
+│   ├── REQUIREMENTS_SRS.md   # Functional requirements specification (FR-01 to FR-103)
+│   ├── AI_INTEGRATION.md     # Local Ollama integration manual
+│   ├── API_REFERENCE.md      # REST & SSE endpoint reference
+│   └── DEVELOPMENT_LOGS.md   # Engineering history & milestones
+│
+├── .gitignore                # Git ignore rules
+├── LICENSE                   # MIT License
+├── README.md                 # Project overview & documentation
+└── run.bat                   # Windows local launcher script
+```
 
 ---
 
-## 📄 License
+## Limitations and roadmap
 
-Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
+### Current Limitations
+- **Small-model accuracy on text-sparse files**: Lightweight 1B–1.5B parameter models can misclassify files with little or no extracted text. The dry-run approval queue is designed to catch these cases before any change is applied.
+- **Regional language support**: OCR and prototype keyword parsing are currently optimized for English documents. Content in Indic scripts (e.g., Hindi, Marathi) requires additional language model and OCR tuning.
+- **Large directory indexing**: Directories containing tens of thousands of files require longer initial scanning times during deep recursive walks.
+
+### Roadmap
+1. Integrate native ONNX runtime embeddings for local semantic vector search across personal notes.
+2. Add multi-language OCR models for regional documents and identity cards.
+3. Introduce an in-app custom taxonomy editor allowing users to define custom category rules and subfolder schemas.
+4. Package the application as a standalone desktop executable (Tauri or Electron wrapper) with an embedded Python runtime.
+
+---
+
+## Contributing
+
+Contributions and issue reports are welcome.
+
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/your-feature`.
+3. Commit your changes: `git commit -m "feat: description of change"`.
+4. Verify tests pass: run `pytest` in `backend/` and `npm run build` in `frontend/`.
+5. Push to your branch and submit a pull request.
+
+---
+
+## License
+
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for terms.

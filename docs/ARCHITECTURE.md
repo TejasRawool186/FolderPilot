@@ -10,7 +10,7 @@
 
 FolderPilot is an offline, local-first folder intelligence and reorganization application. It ingests an unorganized directory, indexes and classifies files via a hierarchical 4-tier pipeline, visually presents proposed organization structures, and executes operations with a strict zero-data-loss guarantee.
 
-### 🛡️ Ironclad Invariants
+### Ironclad Invariants
 1. **Zero Deletion & Zero Overwrite**: Under no condition does the codebase contain or expose an `unlink`, `remove`, `delete`, or truncate operation for user files.
 2. **Deterministic Auto-Suffixing**: When destination target collisions occur, the engine strictly applies counter suffixes (`filename (1).ext`).
 3. **Explicit User Gate**: No file on disk is modified without explicit user approval. Default state of all proposed operations is unapproved (`approved = false`).

@@ -29,7 +29,7 @@ export default function Navbar({
       const status = await fetchAiStatus();
       setAiStatus(status);
     } catch (_) {
-      setAiStatus({ available: false, model: 'qwen2.5:1.5b' });
+      setAiStatus({ available: false, model: 'gemma3:1b' });
     }
   }
 

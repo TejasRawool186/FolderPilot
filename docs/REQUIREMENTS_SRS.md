@@ -1,6 +1,7 @@
 # FolderPilot: Software Requirements Specification
 
-**Version:** 1.0 | **Date:** 3 Oct 2026 | **Author:** Tejas **Project:** Hacktoberfest Weekend Challenge, "Build for a Friend" **One-liner:** A local, privacy-first web app that analyzes any folder, shows it visually with color-coded suggested sorting, lets you customize and approve the plan, and lets you chat with the folder. It can never delete anything.
+**Version:** 1.0 | **Date:** October 2026 | **Author:** Tejas | **Project:** FolderPilot  
+**One-liner:** A local, privacy-first web app that analyzes any folder, shows it visually with color-coded suggested sorting, lets you customize and approve the plan, and lets you chat with the folder. It can never delete anything.
 
 ---
 
@@ -60,7 +61,7 @@ flowchart LR
 
 ### 2.2 User classes
 
-- **Primary:** students and office users with messy folders (the "friend" for the challenge).
+- **Primary:** students and office users with messy personal folders.
 - **Secondary:** parents or relatives who need a simple, safe tool.
 
 ### 2.3 Operating environment
