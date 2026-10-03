@@ -4,6 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { Folder, Play, CheckSquare, MessageSquare, History, Lock, Terminal, Sparkles } from 'lucide-react';
 import { fetchAiStatus, setAiModel } from '../api';
 
+function getFolderName(pathStr) {
+  if (!pathStr) return "Select target workspace...";
+  const parts = pathStr.replace(/[\\/]+$/, '').split(/[\\/]/);
+  return parts[parts.length - 1] || pathStr;
+}
+
 export default function Navbar({
   workspace,
   stats,
@@ -58,15 +64,15 @@ export default function Navbar({
     <header className="h-16 min-h-[64px] shrink-0 border-b border-steel-border bg-page-ink sticky top-0 z-30 flex items-center justify-between px-6 gap-4">
       {/* Brand & Workspace */}
       <div className="flex items-center space-x-4 sm:space-x-6 min-w-0">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-md bg-card-carbon border border-steel-border flex items-center justify-center">
-            <Terminal className="w-4 h-4 text-blue-cornflower" />
+        <div className="flex items-center space-x-3 shrink-0">
+          <div className="w-8 h-8 rounded-md bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-cornflower shadow-sm">
+            <Terminal className="w-4 h-4" />
           </div>
           <div className="flex items-center space-x-2">
-            <span className="font-semibold text-base tracking-tight text-snow">
-              FolderPilot
+            <span className="font-bold text-lg tracking-tight text-white flex items-center">
+              Folder<span className="text-blue-cornflower">Pilot</span>
             </span>
-            <span className="font-mono text-[11px] uppercase tracking-wider px-1.5 py-0.5 rounded-sm bg-card-carbon border border-steel-border text-ash">
+            <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-card-carbon border border-steel-border text-ash font-medium">
               CONTROL ROOM
             </span>
           </div>
@@ -76,13 +82,20 @@ export default function Navbar({
         <button
           onClick={onOpenFolderPicker}
           className="flex items-center space-x-2 px-3 py-1.5 rounded-md bg-card-carbon border border-steel-border hover:border-graphite text-xs text-ash hover:text-snow transition-colors max-w-sm truncate"
-          title="Change Workspace Folder"
+          title={`Active Workspace: ${workspace?.root_path || 'None'}\nClick to change folder`}
         >
           <Folder className="w-3.5 h-3.5 text-blue-cornflower shrink-0" />
-          <span className="truncate font-mono">{workspace?.root_path || "Select target workspace..."}</span>
+          <span className="truncate font-mono font-medium text-snow">
+            {workspace?.root_path ? getFolderName(workspace.root_path) : "Select target workspace..."}
+          </span>
+          {workspace?.root_path && (
+            <span className="text-[10px] text-fog font-mono truncate hidden lg:inline max-w-[140px]">
+              {workspace.root_path}
+            </span>
+          )}
         </button>
 
-        {workspace?.read_only && (
+        {Boolean(workspace?.read_only) && (
           <span className="inline-flex items-center font-mono text-[11px] uppercase tracking-wider px-2 py-0.5 rounded-sm bg-deep-coal text-ash border border-steel-border">
             <Lock className="w-3 h-3 mr-1 text-blue-cornflower" /> READ-ONLY
           </span>
