@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="docs/logo.png" width="84" alt="FolderPilot logo" />
-
 # FolderPilot
 
 **Organize anything. Delete nothing.**
@@ -16,39 +14,19 @@ append-only rollback journaling, and on-device AI.
 ![Offline](https://img.shields.io/badge/Works-Offline-9D8CFF?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-E9C46A?style=flat-square)
 
-[Demo](#demo) · [Why this exists](#why-this-exists) · [How it works](#how-it-works) · [Features](#features) · [Safety model](#safety-model) · [Quick start](#quick-start)
+[Overview](#why-this-exists) · [How it works](#how-it-works) · [Features](#features) · [Safety model](#safety-model) · [Quick start](#quick-start)
 
 </div>
 
 ---
 
-## Demo
-
-[TODO: Add demo GIF showing scan -> treemap -> before/after split tree -> approve plan -> undo action]
-
-| D3 Treemap Visualizer | Before & After Comparison Tree | Centered Live Scanner |
-|---|---|---|
-| ![TODO: Screenshot of D3 Treemap](docs/screenshots/treemap.png) | ![TODO: Screenshot of Before/After Split Tree](docs/screenshots/comparison.png) | ![TODO: Screenshot of WanderingEyes Scanner](docs/screenshots/scanner.png) |
-
----
-
 ## Why this exists
 
-Personal directories such as Downloads, Desktop, and work folders routinely accumulate private files, including tax returns, identity cards, college transcripts, and resumes. Most of these files remain unsorted because manual organization is slow and tedious.
+Personal directories such as Downloads, Desktop, and work folders routinely accumulate sensitive files—including tax returns, identity cards, college transcripts, and resumes. Most of these files remain disorganized because manual sorting is slow and tedious.
 
-Existing cleanup tools often rely on cloud APIs that require uploading private documents to external servers. Other utility scripts use aggressive delete operations that risk unrecoverable data loss.
+Typical cloud organizers require uploading private documents to external servers. Other utility scripts use aggressive delete operations that risk permanent data loss.
 
-FolderPilot was built to provide an intelligent folder organizer that runs entirely on local hardware, processes documents privately without network egress, and ensures by design that no file can ever be deleted.
-
----
-
-## Built for
-
-FolderPilot was originally built for [TODO: friend's name], whose [TODO: description of friend's folder, e.g. Downloads directory with over 1,400 mixed PDFs, lecture slides, invoices, and photos] had become unmanageable. Locating critical documents required scrolling through months of unstructured downloads.
-
-After testing the initial dry-run simulation and organizing the files into structured directories with zero data loss, they noted:
-
-> "[TODO: quote from friend on experience using FolderPilot]"
+FolderPilot runs entirely on local hardware, inspects documents privately on `127.0.0.1`, and guarantees that no file can ever be deleted.
 
 ---
 
@@ -61,38 +39,38 @@ Running open-weight language models locally on consumer hardware changes the eco
 | **Privacy** | Local-only. File contents, extracted text, and metadata never leave `127.0.0.1`. | Documents, filenames, and text excerpts are transmitted over the internet to remote servers. |
 | **Cost** | Zero marginal cost per file. Runs on available CPU and RAM. | Metered API pricing that scales with document volume and token counts. |
 | **Offline use** | Fully operational without an internet connection once weights are cached. | Inoperable during network outages or when working in disconnected environments. |
-| **Model choice** | Open weights (defaults to Gemma 3 1B with Qwen 2.5 1.5B fallback). User can change models freely. | Locked to a single provider's proprietary API, rate limits, and deprecation schedules. |
-| **Adaptability** | Manual category overrides are stored in local SQLite to influence future scans. | Generic prompt adaptation with no local ownership of model behavior. |
+| **Model choice** | Open weights (defaults to Gemma 3 1B with Qwen 2.5 1.5B fallback). User can switch models freely. | Locked to a single provider's proprietary API, rate limits, and deprecation schedules. |
+| **Adaptability** | Manual category overrides are stored in local SQLite to guide future scans. | Generic prompt adaptation with no local ownership of model behavior. |
 | **Accuracy tradeoff** | Smaller 1B–1.5B models may misclassify ambiguous files. Mitigated by explicit review queues. | Higher zero-shot accuracy, but accompanied by data exposure and recurring API costs. |
 
 ---
 
 ## How it works
 
-FolderPilot processes directories using a 4-tier hierarchical classification pipeline. Inexpensive deterministic checks run first, reserving local LLM inference only for ambiguous files.
+FolderPilot organizes directories using a 4-tier hierarchical classification pipeline. Inexpensive deterministic checks run first, reserving local LLM inference only for ambiguous files.
 
 ```mermaid
 flowchart TD
-    FILE["Selected File"] --> T1["Tier 1: Extension & Filename Rules<br/>Matches extensions (.png, .py) and filename regexes (resume*, invoice*)"]
-    T1 -- Unmatched / Low Confidence --> T2["Tier 2: Hashes & Duplicate Detection<br/>Lazy SHA-256 for identical sizes"]
-    T2 -- Unique Content --> T3["Tier 3: Content Prototype Keywords<br/>Analyzes first ~500 tokens for domain terms"]
-    T3 -- Low Confidence --> T4["Tier 4: Local LLM Fallback<br/>Gemma 3 1B / Qwen 2.5 1.5B constrained JSON"]
-    T4 --> PLAN["Proposed Plan Draft<br/>Dry-run only; requires explicit approval"]
+    FILE["Selected File"] --> T1["Tier 1: Extension & Filename Rules<br/>Matches extensions (.png, .py) and filename patterns (resume*, invoice*)"]
+    T1 -- Low Confidence --> T2["Tier 2: Hashes & Duplicate Detection<br/>Lazy SHA-256 for files with identical sizes"]
+    T2 -- Unique Content --> T3["Tier 3: Content Prototype Keywords<br/>Analyzes first ~500 tokens for domain keywords"]
+    T3 -- Ambiguous --> T4["Tier 4: Local LLM Fallback<br/>Gemma 3 1B / Qwen 2.5 1.5B constrained JSON"]
+    T4 --> PLAN["Proposed Plan Draft<br/>Dry-run only; requires explicit user approval"]
 ```
 
-| Pipeline Tier | Primary Mechanism | Target File Types | Estimated Share [TODO] |
+| Pipeline Tier | Primary Mechanism | Target File Types | Scope |
 |---|---|---|---|
-| **Tier 1: Rules** | Extension taxonomy and regex keyword matching | Code, archives, images, media, common filenames (`screenshot`, `resume`) | [TODO: ~70%] |
-| **Tier 2: Hashes** | Lazy SHA-256 hashing for files sharing identical byte sizes | Duplicate documents, repeated downloads, installer copies | [TODO: ~15%] |
-| **Tier 3: Prototypes** | Keyword frequency checks in first ~500 extracted tokens | Academic assignments, invoices, tax receipts, offer letters | [TODO: ~10%] |
-| **Tier 4: Local LLM** | Ollama constrained JSON schema classification | Ambiguous PDFs, poorly named reports, multi-topic text files | [TODO: ~5%] |
+| **Tier 1: Rules** | Extension taxonomy and regex keyword matching | Code, archives, images, media, common filenames (`screenshot`, `resume`) | Majority of standard files |
+| **Tier 2: Hashes** | Lazy SHA-256 hashing for files sharing identical byte sizes | Duplicate documents, repeated downloads, installer copies | Identical content files |
+| **Tier 3: Prototypes** | Keyword frequency checks in first ~500 extracted tokens | Academic assignments, invoices, tax receipts, offer letters | Text-rich documents |
+| **Tier 4: Local LLM** | Ollama constrained JSON schema classification | Ambiguous PDFs, poorly named reports, multi-topic text files | Ambiguous fallback files |
 
 ---
 
 ## Features
 
 - **Visualizations**: Interactive D3 Treemap with drill-down navigation and spotlight search; DaisyDisk-style concentric Sunburst view; side-by-side Before/After comparison tree.
-- **Chaos score**: Algorithmic disorder metric (0 to 100) factoring root pollution, deep nesting imbalances, and duplicate ratios; interactive slider to simulate cleanup progress in real time.
+- **Chaos score**: Algorithmic disorder metric (0 to 100) factoring root clutter, deep nesting imbalances, and duplicate ratios; interactive slider to simulate cleanup progress in real time.
 - **Duplicate clusters**: Identifies identical files via lazy SHA-256 hashing; groups duplicates with keep-original and keep-newest recommendations.
 - **Folder chat**: Local conversational interface powered by SQLite schema introspection and local LLM reasoning; includes built-in refusal for destructive commands.
 - **Previewer**: In-app viewer supporting images, video, audio streaming, PDF text extraction via PyMuPDF, formatted Word/PowerPoint documents, spreadsheets, and hex dump inspection.
@@ -130,23 +108,10 @@ You can also change the active model at runtime using the model selector in the 
 
 Hardware requirements: Standard multi-core CPU and 8 GB RAM. A dedicated GPU is not required.
 
-| Model | Parameters | Quantization | RAM Usage [TODO] | CPU Inference Speed [TODO] | Best For |
-|---|---|---|---|---|---|
-| **Gemma 3 1B** (Default) | ~1B | Q4_K_M | [TODO: ~1.2 GB] | [TODO: ~25 tok/s] | Fast CPU categorization, low memory footprints |
-| **Qwen 2.5 1.5B** | 1.5B | Q4_K_M | [TODO: ~1.6 GB] | [TODO: ~18 tok/s] | Complex text reasoning, multi-language documents |
-
----
-
-## Results
-
-[TODO: Benchmark measured on a labeled test set of N realistic personal files including messy downloads, lecture notes, resumes, and invoices.]
-
-| Evaluation Metric | Baseline (Filename Only) | Rules + Prototypes | Full Pipeline (+ Local LLM) |
-|---|---|---|---|
-| **Classification Accuracy** | [TODO: 62%] | [TODO: 84%] | [TODO: 93%] |
-| **Duplicate Precision** | N/A | 100% | 100% |
-| **Chat Intent Accuracy** | N/A | N/A | [TODO: 89%] |
-| **Scan Throughput** | [TODO: ~450 files/s] | [TODO: ~120 files/s] | [TODO: ~35 files/s (LLM queue)] |
+| Model | Parameters | Quantization | Footprint | Best For |
+|---|---|---|---|---|
+| **Gemma 3 1B** (Default) | ~1B | Q4_K_M | ~1.2 GB RAM | Fast CPU categorization, low memory systems |
+| **Qwen 2.5 1.5B** | 1.5B | Q4_K_M | ~1.6 GB RAM | Complex text reasoning, multi-language documents |
 
 ---
 
@@ -233,7 +198,7 @@ cd backend
 pytest -v
 ```
 
-All 19 automated unit and integration tests should pass:
+All 19 automated unit and integration tests pass:
 - `tests/test_ai_ollama.py` (3 tests: status, model switching, summarization)
 - `tests/test_chat_engine.py` (2 tests: deletion refusal, count queries)
 - `tests/test_classifier.py` (4 tests: extensions, keywords, prototypes, sensitive data)
@@ -313,7 +278,7 @@ FolderPilot/
 ## Limitations and roadmap
 
 ### Current Limitations
-- **Small-model accuracy on text-sparse files**: Lightweight 1B–1.5B parameter models can misclassify files with little or no extracted text. The dry-run approval queue is designed to catch these cases before any change is applied.
+- **Small-model accuracy on text-sparse files**: Lightweight 1B–1.5B parameter models can misclassify files with little or no extracted text. The dry-run approval queue catches these cases before changes are applied.
 - **Regional language support**: OCR and prototype keyword parsing are currently optimized for English documents. Content in Indic scripts (e.g., Hindi, Marathi) requires additional language model and OCR tuning.
 - **Large directory indexing**: Directories containing tens of thousands of files require longer initial scanning times during deep recursive walks.
 
