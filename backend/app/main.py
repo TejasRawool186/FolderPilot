@@ -308,6 +308,16 @@ def get_job_status(job_id: str):
         raise HTTPException(status_code=404, detail="Job not found")
     return scan_jobs[job_id]
 
+@app.post("/jobs/{job_id}/cancel")
+def cancel_scan_job(job_id: str):
+    """Requests cancellation of a running background scan job."""
+    if job_id not in scan_jobs:
+        raise HTTPException(status_code=404, detail="Job not found")
+    scan_jobs[job_id]["cancel_requested"] = True
+    scan_jobs[job_id]["status"] = "cancelled"
+    return {"status": "cancelled", "job_id": job_id}
+
+
 @app.get("/jobs/{job_id}/stream")
 async def stream_job_progress(job_id: str):
     """Server-Sent Events (SSE) live progress stream (FR-10)."""

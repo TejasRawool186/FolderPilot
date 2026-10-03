@@ -44,6 +44,15 @@ export async function fetchJobStatus(jobId) {
   return res.json();
 }
 
+export async function cancelScanJob(jobId) {
+  const res = await fetch(`/jobs/${jobId}/cancel`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export async function fetchStats(wsId) {
   const res = await fetch(`/workspaces/${wsId}/stats`);
   if (!res.ok) throw new Error(await res.text());

@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import FolderPickerModal from '../components/FolderPickerModal';
-import ScanningProgress from '../components/ScanningProgress';
 import StatsOverview from '../components/StatsOverview';
 import ChaosScoreCard from '../components/ChaosScoreCard';
 import TreemapView from '../components/TreemapView';
@@ -15,6 +14,7 @@ import ChatDrawer from '../components/ChatDrawer';
 import JournalHistoryView from '../components/JournalHistoryView';
 import FilePreviewModal from '../components/FilePreviewModal';
 import CommandPaletteModal from '../components/CommandPaletteModal';
+import WanderingEyes from '../components/WanderingEyes';
 
 import {
   listWorkspaces,
@@ -24,10 +24,11 @@ import {
   fetchFiles,
   startScan,
   fetchJobStatus,
+  cancelScanJob,
   generatePlan,
   overrideCategory
 } from '../api';
-import { LayoutGrid, GitFork, Copy, FileText, Sparkles, Folder, Disc, Search } from 'lucide-react';
+import { LayoutGrid, GitFork, Copy, FileText, Sparkles, Folder, Disc, Search, XCircle, Loader2 } from 'lucide-react';
 import { formatBytes } from '../utils/colors';
 
 export default function Home() {
@@ -139,6 +140,19 @@ export default function Home() {
     }
   }
 
+  async function handleCancelScan() {
+    if (activeJobId) {
+      try {
+        await cancelScanJob(activeJobId);
+      } catch (err) {
+        console.error('Failed to cancel scan:', err);
+      }
+      setActiveJobId(null);
+      setScanJob(null);
+      if (workspace) reloadWorkspaceData(workspace.id);
+    }
+  }
+
   async function handleOpenPlan() {
     if (!workspace) return;
     try {
@@ -183,8 +197,83 @@ export default function Home() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-[1200px] w-full mx-auto p-6 space-y-6">
-        {/* Welcome Empty State */}
-        {!stats || stats.total_files === 0 ? (
+        {/* Active Scan State with WanderingEyes Hero */}
+        {Boolean(activeJobId) ? (
+          <div className="relative overflow-hidden border border-blue-500/30 rounded-xl bg-gradient-to-b from-[#0c121e] via-[#090d16] to-card-carbon p-8 sm:p-12 text-center max-w-2xl mx-auto my-8 space-y-7 shadow-2xl shadow-blue-950/40">
+            {/* Background ambient radial glow */}
+            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            {/* WanderingEyes Animation */}
+            <div className="relative py-2 flex flex-col items-center justify-center">
+              <WanderingEyes size="xl" />
+            </div>
+
+            {/* Status Header */}
+            <div className="space-y-2 relative z-10">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25">
+                <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
+                <span className="font-mono text-xs font-semibold uppercase tracking-wider text-blue-400">
+                  SCANNING &amp; INDEXING WORKSPACE
+                </span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-snow">
+                {scanJob?.current_file ? 'Analyzing Files & Directory Structure...' : 'Discovering Files...'}
+              </h2>
+              {workspace?.root_path && (
+                <p className="text-xs text-ash font-mono truncate max-w-lg mx-auto bg-deep-coal/80 px-3 py-1.5 rounded border border-steel-border/50">
+                  {workspace.root_path}
+                </p>
+              )}
+            </div>
+
+            {/* Large Progress Bar with Shimmer */}
+            <div className="space-y-2 relative z-10">
+              <div className="w-full bg-deep-coal rounded-full h-3 overflow-hidden border border-steel-border shadow-inner p-[1px]">
+                <div
+                  className="bg-gradient-to-r from-blue-600 via-blue-400 to-cyan-300 h-full rounded-full transition-all duration-300 relative shadow-[0_0_12px_rgba(96,165,250,0.6)]"
+                  style={{
+                    width: `${scanJob?.total_files > 0 ? Math.min(100, Math.round(((scanJob.files_seen || 0) / scanJob.total_files) * 100)) : 8}%`
+                  }}
+                />
+              </div>
+
+              {/* Live Metric Badges */}
+              <div className="flex items-center justify-between text-xs text-ash font-mono pt-1">
+                <span className="text-fog">
+                  <strong className="text-snow">{scanJob?.files_seen || 0}</strong> / {scanJob?.total_files || '...'} files
+                </span>
+                <span className="text-fog">
+                  Indexed: <strong className="text-snow">{formatBytes(scanJob?.bytes_seen || 0)}</strong>
+                </span>
+                <span className="font-bold text-blue-400 text-sm">
+                  {scanJob?.total_files > 0 ? Math.min(100, Math.round(((scanJob.files_seen || 0) / scanJob.total_files) * 100)) : 0}%
+                </span>
+              </div>
+            </div>
+
+            {/* Currently Processing File Ticker */}
+            <div className="flex items-center space-x-2.5 text-xs text-ash bg-deep-coal/90 px-3.5 py-2.5 rounded-md border border-steel-border text-left font-mono relative z-10">
+              <FileText className="w-4 h-4 text-blue-400 shrink-0 animate-pulse" />
+              <div className="truncate flex-1">
+                <span className="text-fog text-[10px] block uppercase tracking-wider">CURRENT TARGET</span>
+                <span className="text-snow truncate block font-medium">
+                  {scanJob?.current_file || 'Reading filesystem metadata...'}
+                </span>
+              </div>
+            </div>
+
+            {/* Cancel Scan Action */}
+            <div className="pt-2 relative z-10 flex items-center justify-center">
+              <button
+                onClick={handleCancelScan}
+                className="inline-flex items-center space-x-2 px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 active:bg-red-500/30 text-red-400 hover:text-red-300 border border-red-500/30 rounded-md font-mono text-xs font-medium transition-all shadow-sm group cursor-pointer"
+              >
+                <XCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                <span>Cancel Scan</span>
+              </button>
+            </div>
+          </div>
+        ) : !stats || stats.total_files === 0 ? (
           <div className="border border-steel-border rounded-md bg-card-carbon p-12 text-center max-w-xl mx-auto my-12 space-y-5">
             <div className="w-12 h-12 rounded-md bg-deep-coal border border-steel-border text-blue-cornflower mx-auto flex items-center justify-center">
               <Folder className="w-6 h-6" />
@@ -402,15 +491,6 @@ export default function Home() {
           </>
         )}
       </main>
-
-      {/* Floating Scanning Progress */}
-      <ScanningProgress
-        job={scanJob}
-        onCancel={() => {
-          setActiveJobId(null);
-          setScanJob(null);
-        }}
-      />
 
       {/* Folder Picker Modal */}
       <FolderPickerModal
