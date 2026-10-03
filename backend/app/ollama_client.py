@@ -125,7 +125,7 @@ Return ONLY valid JSON matching this schema:
             return None
 
         model_name = status["model"]
-        prompt = f"""You are the FolderPilot AI engine powered by Qwen 2.5.
+        prompt = f"""You are the FolderPilot AI engine powered by local {model_name}.
 Summarize the following file and provide actionable insights in concise bullet points.
 
 File: {filename}
@@ -172,7 +172,8 @@ Keep the output professional, direct, and under 150 words."""
         chat_history: Optional[List[Dict[str, str]]] = None
     ) -> Optional[str]:
         """
-        Uses Qwen2.5:1.5b to hold intelligent conversational dialogue about the user's files and folder organization.
+        Uses the active local model (e.g. gemma3:1b, qwen2.5:1.5b) to hold intelligent conversational dialogue
+        about the user's files, structure, and organization.
         """
         status = cls.get_status()
         if not status["available"]:
@@ -181,23 +182,53 @@ Keep the output professional, direct, and under 150 words."""
         model_name = status["model"]
 
         system_prompt = (
-            "You are FolderPilot AI, an intelligent, privacy-first local file organization assistant "
-            "running on local Qwen 2.5 (1.5B). "
+            f"You are FolderPilot AI, an intelligent, privacy-first local file organization assistant "
+            f"running on local {model_name} via Ollama. "
             "You help users understand their folder contents, analyze chaos scores, find documents, "
             "and suggest safe organization structures. "
-            "SAFETY INVARIANT: FolderPilot is STRICTLY NON-DESTRUCTIVE. Never advise deleting files; "
-            "if the user asks to clean up or delete, suggest proposing moves to a '_Review_Later/' or 'Archive/' folder instead. "
+            "SAFETY INVARIANT: FolderPilot is STRICTLY NON-DESTRUCTIVE. Never advise deleting or wiping files. "
+            "When users ask how to organize, tackle, or structure messy files, give practical organization strategies "
+            "based on the current workspace context (e.g. sorting into clean categories like Documents, Images, Code, Media, Archives) "
+            "and generating reversible dry-run plans with zero data loss. "
             "Keep answers concise, direct, helpful, and formatted in clean markdown with bold highlights.\n\n"
             f"CURRENT WORKSPACE CONTEXT:\n{workspace_context}"
         )
 
-        # Build prompt format
+        # 1. Try Ollama native /api/chat endpoint first (preserves chat template for Gemma, Qwen, etc.)
+        try:
+            messages = [{"role": "system", "content": system_prompt}]
+            if chat_history:
+                for msg in chat_history[-6:]:
+                    role = "user" if msg.get("role") == "user" else "assistant"
+                    messages.append({"role": role, "content": msg.get("content", "")})
+            messages.append({"role": "user", "content": user_message})
+
+            response = requests.post(
+                f"{settings.OLLAMA_BASE_URL}/api/chat",
+                json={
+                    "model": model_name,
+                    "messages": messages,
+                    "stream": False,
+                    "options": {
+                        "temperature": 0.4,
+                        "num_predict": 350
+                    }
+                },
+                timeout=25.0
+            )
+            if response.status_code == 200:
+                text = response.json().get("message", {}).get("content", "").strip()
+                if text:
+                    return text
+        except Exception as e:
+            logger.debug(f"Ollama /api/chat failed, attempting /api/generate fallback: {e}")
+
+        # 2. Fallback to /api/generate
         full_prompt = f"{system_prompt}\n\n"
         if chat_history:
             for msg in chat_history[-4:]:
                 sender = "User" if msg.get("role") == "user" else "FolderPilot"
                 full_prompt += f"{sender}: {msg.get('content', '')}\n"
-
         full_prompt += f"User: {user_message}\nFolderPilot:"
 
         try:
@@ -208,15 +239,17 @@ Keep the output professional, direct, and under 150 words."""
                     "prompt": full_prompt,
                     "stream": False,
                     "options": {
-                        "temperature": 0.3,
-                        "num_predict": 250
+                        "temperature": 0.4,
+                        "num_predict": 300
                     }
                 },
-                timeout=15.0
+                timeout=20.0
             )
             if response.status_code == 200:
                 text = response.json().get("response", "").strip()
-                return text
+                if text:
+                    return text
         except Exception as e:
             logger.error(f"Ollama chat error: {e}")
+
         return None

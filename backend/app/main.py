@@ -646,14 +646,14 @@ def chat_with_folder(ws_id: str, req: ChatRequest):
             (str(uuid.uuid4()), ws_id, req.message)
         )
         conn.execute(
-            "INSERT INTO chat_messages (id, workspace_id, role, content) VALUES (?, ?, 'assistant', ?)",
-            (str(uuid.uuid4()), ws_id, response["content"])
+            "INSERT INTO chat_messages (id, workspace_id, role, content, tool_calls_json, model) VALUES (?, ?, 'assistant', ?, ?, ?)",
+            (str(uuid.uuid4()), ws_id, response["content"], response.get("tool_used"), response.get("model"))
         )
     return response
 
 @app.get("/workspaces/{ws_id}/chat/history")
 def get_chat_history(ws_id: str):
-    return query_all("SELECT * FROM chat_messages WHERE workspace_id = ? ORDER BY ts ASC", (ws_id,))
+    return query_all("SELECT id, workspace_id, role, content, tool_calls_json as toolUsed, model, ts FROM chat_messages WHERE workspace_id = ? ORDER BY ts ASC", (ws_id,))
 
 # --- Local Ollama AI Endpoints ---
 
@@ -680,7 +680,7 @@ def set_ai_model(req: SetModelRequest):
 
 @app.post("/api/ai/summarize")
 def summarize_file_with_ai(req: SummarizeRequest):
-    """Summarizes a file or snippet using Qwen 2.5 local model."""
+    """Summarizes a file or snippet using the active local on-device AI model."""
     from app.ollama_client import OllamaClient
     from app.scanner import extract_text_from_file
 

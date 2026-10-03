@@ -14,7 +14,9 @@ export default function Navbar({
   onToggleChat,
   onOpenHistory,
   onOpenSearch,
-  isScanning
+  isScanning,
+  activeModel,
+  onModelChange
 }) {
   const [aiStatus, setAiStatus] = useState(null);
 
@@ -28,8 +30,11 @@ export default function Navbar({
     try {
       const status = await fetchAiStatus();
       setAiStatus(status);
+      if (status?.model && onModelChange) {
+        onModelChange(status.model);
+      }
     } catch (_) {
-      setAiStatus({ available: false, model: 'gemma3:1b' });
+      setAiStatus({ available: false, model: activeModel || 'gemma3:1b' });
     }
   }
 
@@ -38,6 +43,9 @@ export default function Navbar({
     try {
       const updated = await setAiModel(newModel);
       setAiStatus(updated);
+      if (onModelChange && updated?.model) {
+        onModelChange(updated.model);
+      }
     } catch (err) {
       console.error("Failed to switch model:", err);
     }
@@ -131,7 +139,7 @@ export default function Navbar({
             </select>
           ) : (
             <span className={`font-semibold ${aiStatus?.available ? 'text-blue-cornflower' : 'text-fog'}`}>
-              {aiStatus?.available ? (aiStatus.model || 'qwen2.5:1.5b') : 'OFFLINE'}
+              {aiStatus?.available ? (aiStatus.model || activeModel || 'gemma3:1b') : 'OFFLINE'}
             </span>
           )}
         </div>

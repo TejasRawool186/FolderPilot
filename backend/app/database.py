@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     role TEXT NOT NULL,
     content TEXT NOT NULL,
     tool_calls_json TEXT,
+    model TEXT,
     ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -133,6 +134,10 @@ def init_db():
     logger.info(f"Initializing database at: {db_file}")
     with sqlite3.connect(db_file) as conn:
         conn.executescript(SCHEMA_SQL)
+        try:
+            conn.execute("ALTER TABLE chat_messages ADD COLUMN model TEXT")
+        except Exception:
+            pass
         conn.commit()
 
 @contextmanager

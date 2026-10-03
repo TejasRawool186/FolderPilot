@@ -213,7 +213,7 @@ def handle_chat_message(workspace_id: str, message: str) -> Dict[str, Any]:
                 "content": f"No indexed files found matching **'{search_keywords}'**."
             }
 
-    # 8. Local AI Assistant with Qwen 2.5 (1.5B)
+    # 8. Local AI Assistant (Ollama)
     from app.ollama_client import OllamaClient
     if OllamaClient.is_available():
         # Build live workspace context
@@ -260,11 +260,12 @@ def handle_chat_message(workspace_id: str, message: str) -> Dict[str, Any]:
         ai_reply = OllamaClient.chat_response(msg_clean, workspace_context, history)
         if ai_reply:
             status = OllamaClient.get_status()
+            active_model = status.get("model", "gemma3:1b")
             return {
                 "role": "assistant",
                 "content": ai_reply,
-                "tool_used": "qwen_ai",
-                "model": status.get("model", "qwen2.5:1.5b")
+                "tool_used": "local_ai",
+                "model": active_model
             }
 
     # 9. Fallback summary if AI is offline

@@ -65,6 +65,7 @@ export default function Home() {
   // Scan state
   const [activeJobId, setActiveJobId] = useState(null);
   const [scanJob, setScanJob] = useState(null);
+  const [activeModel, setActiveModel] = useState('gemma3:1b');
 
   useEffect(() => {
     loadRecentWorkspace();
@@ -193,6 +194,8 @@ export default function Home() {
         onOpenHistory={() => setIsHistoryOpen(true)}
         onOpenSearch={() => setIsCommandPaletteOpen(true)}
         isScanning={Boolean(activeJobId)}
+        activeModel={activeModel}
+        onModelChange={setActiveModel}
       />
 
       {/* Main Container */}
@@ -524,6 +527,7 @@ export default function Home() {
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
         workspaceId={workspace?.id}
+        activeModel={activeModel}
         onPlanGenerated={(newPlanId) => {
           setActivePlanId(newPlanId);
           setIsPlanOpen(true);
@@ -535,6 +539,7 @@ export default function Home() {
         file={selectedFileForPreview}
         isOpen={Boolean(selectedFileForPreview)}
         onClose={() => setSelectedFileForPreview(null)}
+        activeModel={activeModel}
         onCategoryOverridden={() => {
           if (workspace) reloadWorkspaceData(workspace.id);
         }}

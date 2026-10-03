@@ -9,7 +9,8 @@ import {
 import { fetchFileText, getFilePreviewUrl, revealInExplorer, overrideCategory, fetchAiSummary } from '../api';
 import { formatBytes, getCategoryColor, CATEGORY_COLORS } from '../utils/colors';
 
-export default function FilePreviewModal({ file, isOpen, onClose, onCategoryOverridden }) {
+export default function FilePreviewModal({ file, isOpen, onClose, onCategoryOverridden, activeModel = 'gemma3:1b' }) {
+  const modelDisplay = activeModel || 'Local AI';
   const [activeTab, setActiveTab] = useState('preview'); // 'preview', 'metadata', 'ai'
   const [textContent, setTextContent] = useState(null);
   const [textLoading, setTextLoading] = useState(false);
@@ -142,7 +143,7 @@ export default function FilePreviewModal({ file, isOpen, onClose, onCategoryOver
       setAiSummary(res.summary);
       setActiveTab('ai'); // Switch to AI tab to view full insights
     } catch (e) {
-      setSummaryError(e.message || "Failed to generate AI summary with Qwen 2.5.");
+      setSummaryError(e.message || `Failed to generate AI summary with ${modelDisplay}.`);
     } finally {
       setSummarizing(false);
     }
@@ -291,10 +292,10 @@ export default function FilePreviewModal({ file, isOpen, onClose, onCategoryOver
                 onClick={handleSummarizeWithAi}
                 disabled={summarizing}
                 className="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-xs text-blue-cornflower font-medium transition-colors disabled:opacity-50"
-                title="Summarize document using local Qwen 2.5:1.5b"
+                title={`Summarize document using local ${modelDisplay}`}
               >
                 <Sparkles className={`w-3.5 h-3.5 ${summarizing ? 'animate-spin' : ''}`} />
-                <span>{summarizing ? 'Summarizing...' : 'Summarize (Qwen 2.5)'}</span>
+                <span>{summarizing ? 'Summarizing...' : `Summarize (${modelDisplay})`}</span>
               </button>
 
               {textContent && isPdf && (
@@ -582,12 +583,12 @@ export default function FilePreviewModal({ file, isOpen, onClose, onCategoryOver
           {/* TAB 3: AI & TARGET DESTINATION */}
           {activeTab === 'ai' && (
             <div className="space-y-6 max-w-2xl mx-auto">
-              {/* Local Qwen 2.5 Document Intelligence Card */}
+              {/* Local Document Intelligence Card */}
               <div className="border border-steel-border bg-[#10141d] p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2 text-xs font-mono text-snow uppercase">
                     <Sparkles className="w-4 h-4 text-blue-cornflower" />
-                    <span>Local Document Intelligence (Qwen 2.5:1.5B)</span>
+                    <span>Local Document Intelligence ({modelDisplay})</span>
                   </div>
                   <button
                     onClick={handleSummarizeWithAi}
@@ -595,7 +596,7 @@ export default function FilePreviewModal({ file, isOpen, onClose, onCategoryOver
                     className="flex items-center space-x-1.5 px-3 py-1.5 rounded bg-blue-cornflower hover:bg-blue-400 text-black text-xs font-semibold transition-colors disabled:opacity-50"
                   >
                     <Sparkles className={`w-3.5 h-3.5 ${summarizing ? 'animate-spin' : ''}`} />
-                    <span>{summarizing ? 'Analyzing with Qwen...' : (aiSummary ? 'Regenerate Summary' : 'Generate AI Summary')}</span>
+                    <span>{summarizing ? `Analyzing with ${modelDisplay}...` : (aiSummary ? 'Regenerate Summary' : 'Generate AI Summary')}</span>
                   </button>
                 </div>
 
@@ -611,12 +612,12 @@ export default function FilePreviewModal({ file, isOpen, onClose, onCategoryOver
                   </div>
                 ) : !summarizing ? (
                   <div className="p-4 bg-black/20 border border-steel-border/50 text-xs text-ash font-mono leading-relaxed">
-                    💡 Click <strong>"Generate AI Summary"</strong> to run local <strong>Qwen 2.5:1.5B</strong> on this document. It will extract an overview, 3 key takeaways, and suggested organizational tags with 100% offline privacy.
+                    💡 Click <strong>"Generate AI Summary"</strong> to run local <strong>{modelDisplay}</strong> on this document. It will extract an overview, 3 key takeaways, and suggested organizational tags with 100% offline privacy.
                   </div>
                 ) : (
                   <div className="p-6 text-center text-xs text-ash font-mono space-y-2">
                     <span className="inline-block animate-spin text-blue-cornflower text-base">⠋</span>
-                    <p>Qwen 2.5 is reading and summarizing file contents...</p>
+                    <p>{modelDisplay} is reading and summarizing file contents...</p>
                   </div>
                 )}
               </div>
