@@ -28,10 +28,11 @@ import {
   generatePlan,
   overrideCategory
 } from '../api';
-import { LayoutGrid, GitFork, Copy, FileText, Sparkles, Folder, Disc, Search, XCircle, Loader2 } from 'lucide-react';
+import { LayoutGrid, GitFork, Copy, FileText, Sparkles, Folder, Disc, Search, XCircle, Loader2, ArrowRight, Terminal } from 'lucide-react';
 import { formatBytes } from '../utils/colors';
 
 export default function Home() {
+  const [enteredWorkspace, setEnteredWorkspace] = useState(false);
   const [workspace, setWorkspace] = useState(null);
   const [stats, setStats] = useState(null);
   const [currentTree, setCurrentTree] = useState(null);
@@ -66,24 +67,6 @@ export default function Home() {
   const [activeJobId, setActiveJobId] = useState(null);
   const [scanJob, setScanJob] = useState(null);
   const [activeModel, setActiveModel] = useState('gemma3:1b');
-
-  useEffect(() => {
-    loadRecentWorkspace();
-  }, []);
-
-  async function loadRecentWorkspace() {
-    try {
-      const list = await listWorkspaces();
-      if (list && list.length > 0) {
-        selectWorkspace(list[0]);
-      } else {
-        setIsFolderPickerOpen(true);
-      }
-    } catch (err) {
-      console.error(err);
-      setIsFolderPickerOpen(true);
-    }
-  }
 
   async function selectWorkspace(ws) {
     setWorkspace(ws);
@@ -180,6 +163,50 @@ export default function Home() {
     setSelectedFileForPreview(fullFile);
   }
 
+  if (!enteredWorkspace) {
+    return (
+      <div className="min-h-screen bg-page-ink text-snow flex flex-col justify-center items-center relative overflow-hidden font-sans select-none">
+        {/* Crisp Blueprint Grid Pattern with ambient radial lighting */}
+        <div 
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, rgba(103, 152, 255, 0.08) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(103, 152, 255, 0.08) 1px, transparent 1px)
+            `,
+            backgroundSize: '48px 48px'
+          }}
+        />
+        {/* Soft Radial Ambient Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[720px] h-[480px] bg-blue-500/10 rounded-full blur-[140px] pointer-events-none" />
+
+        {/* Center Hero Section */}
+        <main className="relative z-10 flex flex-col items-center justify-center text-center px-6 max-w-4xl mx-auto space-y-8">
+          {/* Big Text Title */}
+          <div className="space-y-3">
+            <h1 className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tight text-white drop-shadow-sm">
+              Folder<span className="text-blue-cornflower">Pilot</span>
+            </h1>
+            <p className="text-base sm:text-xl text-ash max-w-xl mx-auto font-sans">
+              Organize anything. Delete nothing.
+            </p>
+          </div>
+
+          {/* Center Action Button */}
+          <div className="pt-2">
+            <button
+              onClick={() => setEnteredWorkspace(true)}
+              className="group relative inline-flex items-center space-x-3 px-8 py-3.5 bg-snow hover:bg-slate-200 active:scale-95 text-page-ink font-semibold rounded-lg text-base sm:text-lg transition-all shadow-xl shadow-blue-500/10 hover:shadow-blue-500/25 cursor-pointer"
+            >
+              <span>Enter Workspace</span>
+              <ArrowRight className="w-5 h-5 text-page-ink group-hover:translate-x-1.5 transition-transform" />
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-page-ink text-snow flex flex-col font-sans">
       {/* Top Navbar */}
@@ -196,6 +223,7 @@ export default function Home() {
         isScanning={Boolean(activeJobId)}
         activeModel={activeModel}
         onModelChange={setActiveModel}
+        onGoHome={() => setEnteredWorkspace(false)}
       />
 
       {/* Main Container */}
