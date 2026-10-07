@@ -36,8 +36,15 @@ MOVE_CMD_REGEX = re.compile(
     re.I
 )
 
-def format_bytes(size_bytes: int) -> str:
-    """Formats bytes to human readable string."""
+SUMMARY_QUERY_REGEX = re.compile(
+    r'\b(summary|summarize|overview|breakdown|status|what(?:\'s| is) in (?:this|the) (?:folder|workspace)|tell me about (?:this|the) (?:folder|workspace))\b', 
+    re.I
+)
+
+def format_bytes(size_bytes: Optional[int]) -> str:
+    """Formats bytes to human readable string safely handling None or negative values."""
+    if size_bytes is None or size_bytes <= 0:
+        return "0 B"
     if size_bytes < 1024:
         return f"{size_bytes} B"
     elif size_bytes < 1024 * 1024:
@@ -213,7 +220,78 @@ def handle_chat_message(workspace_id: str, message: str) -> Dict[str, Any]:
                 "content": f"No indexed files found matching **'{search_keywords}'**."
             }
 
-    # 8. Local AI Assistant (Ollama)
+    # 8. Deterministic Folder Summary / Overview (FR-71, FR-72)
+    if SUMMARY_QUERY_REGEX.search(msg_clean):
+        ws = query_one("SELECT * FROM workspaces WHERE id = ?", (workspace_id,))
+        summary_row = query_one("SELECT COUNT(*) as c, SUM(size) as s FROM files WHERE workspace_id = ?", (workspace_id,))
+        cnt = summary_row["c"] if summary_row else 0
+        sz = summary_row["s"] if summary_row and summary_row["s"] else 0
+
+        cat_rows = query_all(
+            """
+            SELECT c.category, COUNT(*) as cnt 
+            FROM classifications c 
+            JOIN files f ON c.file_id = f.id 
+            WHERE f.workspace_id = ? 
+            GROUP BY c.category
+            ORDER BY cnt DESC
+            """, 
+            (workspace_id,)
+        )
+        cat_bullets = "\n".join([f"  • **{r['category']}**: {r['cnt']} files" for r in cat_rows[:6]]) if cat_rows else "  • Uncategorized"
+
+        dup_row = query_one(
+            """
+            SELECT COUNT(*) as cnt
+            FROM dup_members dm
+            JOIN files f ON dm.file_id = f.id
+            WHERE f.workspace_id = ?
+            """,
+            (workspace_id,)
+        )
+        dup_count = dup_row["cnt"] if dup_row else 0
+
+        sens_row = query_one(
+            """
+            SELECT COUNT(*) as cnt
+            FROM classifications c
+            JOIN files f ON c.file_id = f.id
+            WHERE f.workspace_id = ? AND c.is_sensitive = 1
+            """,
+            (workspace_id,)
+        )
+        sens_count = sens_row["cnt"] if sens_row else 0
+
+        largest = query_all(
+            "SELECT name, size FROM files WHERE workspace_id = ? ORDER BY size DESC LIMIT 3",
+            (workspace_id,)
+        )
+        largest_bullets = "\n".join([f"  • `{f['name']}` ({format_bytes(f['size'])})" for f in largest]) if largest else "  • None"
+
+        folder_name = Path(ws["root_path"]).name if ws and ws.get("root_path") else "Workspace"
+
+        summary_text = (
+            f"📁 **Summary of {folder_name}**:\n\n"
+            f"• **Total Files**: **{cnt}** ({format_bytes(sz)})\n"
+            f"• **Duplicates Found**: **{dup_count}** duplicate copies\n"
+            f"• **Sensitive Files**: **{sens_count}** detected\n\n"
+            f"📂 **Top Categories**:\n{cat_bullets}\n\n"
+            f"📦 **Largest Files**:\n{largest_bullets}\n\n"
+            f"💡 *Ask me to 'Find <keyword>', 'Count PDFs', 'Biggest files', or type 'Move all images to Pictures' to generate a safe plan.*"
+        )
+
+        from app.ollama_client import OllamaClient
+        status = OllamaClient.get_status()
+        model_used = status.get("model", "gemma3:1b") if status.get("available") else None
+
+        return {
+            "role": "assistant",
+            "content": summary_text,
+            "tool_used": "workspace_summary",
+            "model": model_used
+        }
+
+    # 9. Local AI Assistant (Ollama)
     from app.ollama_client import OllamaClient
     if OllamaClient.is_available():
         # Build live workspace context
