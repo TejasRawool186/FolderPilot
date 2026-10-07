@@ -146,17 +146,43 @@ export async function fetchJournal(wsId) {
 }
 
 export async function sendChatMessage(wsId, message) {
-  const res = await fetch(`/workspaces/${wsId}/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message })
-  });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  const urls = [`http://127.0.0.1:8000/workspaces/${wsId}/chat`, `/workspaces/${wsId}/chat`];
+  let lastError = null;
+
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+      const errText = await res.text();
+      let detail = errText;
+      try {
+        const parsed = JSON.parse(errText);
+        detail = parsed.detail || errText;
+      } catch (_) {}
+      lastError = new Error(detail);
+    } catch (err) {
+      lastError = err;
+    }
+  }
+  throw lastError || new Error("Failed to communicate with chat engine.");
 }
 
 export async function fetchChatHistory(wsId) {
   const res = await fetch(`/workspaces/${wsId}/chat/history`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function clearChatHistory(wsId) {
+  const res = await fetch(`/workspaces/${wsId}/chat/clear`, {
+    method: 'POST'
+  });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
