@@ -211,17 +211,17 @@ Keep the output professional, direct, and under 150 words."""
                     "stream": False,
                     "options": {
                         "temperature": 0.4,
-                        "num_predict": 350
+                        "num_predict": 180
                     }
                 },
-                timeout=25.0
+                timeout=12.0
             )
             if response.status_code == 200:
                 text = response.json().get("message", {}).get("content", "").strip()
                 if text:
                     return text
         except Exception as e:
-            logger.debug(f"Ollama /api/chat failed, attempting /api/generate fallback: {e}")
+            logger.debug(f"Ollama /api/chat failed or timed out: {e}")
 
         # 2. Fallback to /api/generate
         full_prompt = f"{system_prompt}\n\n"
@@ -240,10 +240,10 @@ Keep the output professional, direct, and under 150 words."""
                     "stream": False,
                     "options": {
                         "temperature": 0.4,
-                        "num_predict": 300
+                        "num_predict": 150
                     }
                 },
-                timeout=20.0
+                timeout=8.0
             )
             if response.status_code == 200:
                 text = response.json().get("response", "").strip()
