@@ -22,7 +22,8 @@ export default function Navbar({
   onOpenSearch,
   isScanning,
   activeModel,
-  onModelChange
+  onModelChange,
+  onGoHome
 }) {
   const [aiStatus, setAiStatus] = useState(null);
 
@@ -64,7 +65,11 @@ export default function Navbar({
     <header className="h-16 min-h-[64px] shrink-0 border-b border-steel-border bg-page-ink sticky top-0 z-30 flex items-center justify-between px-6 gap-4">
       {/* Brand & Workspace */}
       <div className="flex items-center space-x-4 sm:space-x-6 min-w-0">
-        <div className="flex items-center space-x-3 shrink-0">
+        <button
+          onClick={onGoHome}
+          className="flex items-center space-x-3 shrink-0 cursor-pointer text-left hover:opacity-85 transition-opacity"
+          title="Return to Landing Page"
+        >
           <div className="w-8 h-8 rounded-md bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-cornflower shadow-sm">
             <Terminal className="w-4 h-4" />
           </div>
@@ -76,7 +81,7 @@ export default function Navbar({
               CONTROL ROOM
             </span>
           </div>
-        </div>
+        </button>
 
         {/* Selected Workspace Breadcrumb */}
         <button
@@ -132,7 +137,7 @@ export default function Navbar({
         )}
 
         {/* Ollama AI Status Pill */}
-        <div 
+        <div
           className="hidden sm:flex items-center space-x-2 px-3 py-1 rounded-md bg-card-carbon border border-steel-border text-xs font-mono"
           title={aiStatus?.available ? `Connected to Ollama (${aiStatus.base_url || '127.0.0.1:11434'})` : "Ollama is offline. Start Ollama to enable AI features."}
         >
@@ -161,11 +166,10 @@ export default function Navbar({
         <button
           disabled={!workspace || isScanning}
           onClick={onStartScan}
-          className={`flex items-center space-x-1.5 px-4 py-2 rounded-md text-xs font-medium transition-colors ${
-            isScanning
+          className={`flex items-center space-x-1.5 px-4 py-2 rounded-md text-xs font-medium transition-colors ${isScanning
               ? 'bg-card-carbon text-fog border border-steel-border cursor-not-allowed'
               : 'bg-snow text-page-ink hover:bg-slate-200'
-          }`}
+            }`}
         >
           <Play className={`w-3.5 h-3.5 fill-current ${isScanning ? 'animate-spin' : ''}`} />
           <span>{isScanning ? 'SCANNING...' : 'SCAN FOLDER'}</span>
