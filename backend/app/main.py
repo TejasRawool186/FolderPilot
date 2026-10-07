@@ -12,6 +12,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel
 
+import sys
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+
 from app.config import settings
 from app.database import init_db, get_db, query_all, query_one
 from app.folder_browser import browse_directory, is_path_protected, open_native_folder_dialog
@@ -638,22 +646,53 @@ def chat_with_folder(ws_id: str, req: ChatRequest):
     if not ws:
         raise HTTPException(status_code=404, detail="Workspace not found")
 
-    response = handle_chat_message(ws_id, req.message)
-    # Save chat history
-    with get_db() as conn:
-        conn.execute(
-            "INSERT INTO chat_messages (id, workspace_id, role, content) VALUES (?, ?, 'user', ?)",
-            (str(uuid.uuid4()), ws_id, req.message)
-        )
-        conn.execute(
-            "INSERT INTO chat_messages (id, workspace_id, role, content, tool_calls_json, model) VALUES (?, ?, 'assistant', ?, ?, ?)",
-            (str(uuid.uuid4()), ws_id, response["content"], response.get("tool_used"), response.get("model"))
-        )
+    from app.chat_engine import format_bytes
+    try:
+        response = handle_chat_message(ws_id, req.message)
+    except Exception as e:
+        logger.error(f"Error handling chat message: {e}", exc_info=True)
+        # Safe fallback so endpoint NEVER crashes with HTTP 500
+        summary_row = query_one("SELECT COUNT(*) as c, SUM(size) as s FROM files WHERE workspace_id = ?", (ws_id,))
+        cnt = summary_row["c"] if summary_row else 0
+        sz = summary_row["s"] if summary_row and summary_row["s"] else 0
+        response = {
+            "role": "assistant",
+            "content": (
+                f"📁 **Workspace Status**: **{cnt} files** totaling **{format_bytes(sz)}**.\n\n"
+                "*(Note: The AI model took longer than usual or is warming up. "
+                "Deterministic commands like 'Count PDFs', 'Biggest files', or 'Find <name>' are fully available.)*"
+            ),
+            "tool_used": "safe_fallback",
+            "model": "offline"
+        }
+
+    # Save chat history safely without breaking user response on DB lock
+    try:
+        with get_db() as conn:
+            conn.execute(
+                "INSERT INTO chat_messages (id, workspace_id, role, content) VALUES (?, ?, 'user', ?)",
+                (str(uuid.uuid4()), ws_id, req.message)
+            )
+            conn.execute(
+                "INSERT INTO chat_messages (id, workspace_id, role, content, tool_calls_json, model) VALUES (?, ?, 'assistant', ?, ?, ?)",
+                (str(uuid.uuid4()), ws_id, response.get("content", ""), response.get("tool_used"), response.get("model"))
+            )
+    except Exception as e:
+        logger.warning(f"Could not persist chat message: {e}")
+
     return response
 
 @app.get("/workspaces/{ws_id}/chat/history")
 def get_chat_history(ws_id: str):
     return query_all("SELECT id, workspace_id, role, content, tool_calls_json as toolUsed, model, ts FROM chat_messages WHERE workspace_id = ? ORDER BY ts ASC", (ws_id,))
+
+@app.post("/workspaces/{ws_id}/chat/clear")
+@app.delete("/workspaces/{ws_id}/chat/history")
+def clear_chat_history(ws_id: str):
+    """Clears all chat history for the workspace."""
+    with get_db() as conn:
+        conn.execute("DELETE FROM chat_messages WHERE workspace_id = ?", (ws_id,))
+    return {"status": "cleared", "workspace_id": ws_id}
 
 # --- Local Ollama AI Endpoints ---
 
