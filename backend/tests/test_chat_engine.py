@@ -34,3 +34,26 @@ def test_chat_counts(tmp_path):
 
     res = handle_chat_message(ws_id, "How many PDFs are there?")
     assert "**2** PDF" in res["content"]
+
+def test_chat_folder_summary(tmp_path):
+    ws_id = str(uuid.uuid4())
+    root = tmp_path / "MyProject"
+    root.mkdir()
+
+    with get_db() as conn:
+        conn.execute("INSERT INTO workspaces (id, root_path) VALUES (?, ?)", (ws_id, str(root)))
+        f_id = str(uuid.uuid4())
+        conn.execute(
+            "INSERT INTO files (id, workspace_id, path, name, ext, size, mtime, ctime) VALUES (?, ?, ?, ?, ?, ?, 0, 0)",
+            (f_id, ws_id, str(root / "report.pdf"), "report.pdf", ".pdf", 5000)
+        )
+        conn.execute(
+            "INSERT INTO classifications (file_id, category, subfolder, confidence, tier, reason) VALUES (?, 'Documents / Resume', 'Reports', 0.9, 1, 'test')",
+            (f_id,)
+        )
+
+    res = handle_chat_message(ws_id, "Give me summary of the folder")
+    assert res["role"] == "assistant"
+    assert "Summary of MyProject" in res["content"]
+    assert "**1**" in res["content"]
+    assert res["tool_used"] == "workspace_summary"
