@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, CheckSquare, Terminal } from 'lucide-react';
-import { sendChatMessage, fetchChatHistory, fetchAiStatus } from '../api';
+import { X, Send, CheckSquare, Terminal, Plus } from 'lucide-react';
+import { sendChatMessage, fetchChatHistory, clearChatHistory, fetchAiStatus } from '../api';
 
 export default function ChatDrawer({ isOpen, onClose, workspaceId, onPlanGenerated, activeModel }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [aiStatus, setAiStatus] = useState(null);
   const bottomRef = useRef(null);
 
@@ -54,6 +55,26 @@ export default function ChatDrawer({ isOpen, onClose, workspaceId, onPlanGenerat
     }
   }
 
+  async function handleNewChat() {
+    if (loading || clearing) return;
+    try {
+      setClearing(true);
+      if (workspaceId) {
+        await clearChatHistory(workspaceId);
+      }
+    } catch (err) {
+      console.error("Could not clear history:", err);
+    } finally {
+      setClearing(false);
+      setMessages([{
+        id: 'welcome',
+        role: 'assistant',
+        content: `**FolderPilot AI** (running on local **${currentModel}** via Ollama).\n\nAsk me anything about your files, structure, or organization:\n- *'How should I organize my messy downloads?'*\n- *'What files are taking up the most space?'*\n- *'How many PDFs or images do I have?'*\n- *'Rename doc.pdf to Final_Report.pdf'* (generates safe draft plan)\n\nAll AI processing is 100% private and runs entirely on your local machine.`,
+        model: currentModel
+      }]);
+    }
+  }
+
   async function handleSend(e) {
     e?.preventDefault();
     if (!input.trim() || loading) return;
@@ -78,10 +99,14 @@ export default function ChatDrawer({ isOpen, onClose, workspaceId, onPlanGenerat
         onPlanGenerated(res.action_plan_id);
       }
     } catch (err) {
+      const isInternal = err.message?.toLowerCase().includes('internal server error');
+      const errorContent = isInternal
+        ? `⚠️ **Local AI Engine Warming Up**: The local model took longer to respond. Deterministic commands (e.g., *"Give me summary of the folder"*, *"How many PDFs?"*, *"Show largest files"*, *"Rename <file> to <new>"*) remain active immediately.`
+        : `⚠️ **Chat Error**: ${err.message}`;
       setMessages(prev => [...prev, {
         id: String(Date.now() + 1),
         role: 'assistant',
-        content: `Error: ${err.message}`
+        content: errorContent
       }]);
     } finally {
       setLoading(false);
@@ -109,13 +134,26 @@ export default function ChatDrawer({ isOpen, onClose, workspaceId, onPlanGenerat
             <span className="font-mono text-[10px] text-ash block">100% Local & Private via Ollama</span>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded-md hover:bg-card-carbon text-ash hover:text-snow transition-colors"
-          title="Close Terminal Chat"
-        >
-          <X className="w-4 h-4" />
-        </button>
+
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleNewChat}
+            disabled={clearing}
+            className="flex items-center space-x-1 px-2.5 py-1 rounded bg-card-carbon hover:bg-page-ink border border-steel-border hover:border-graphite text-[11px] font-mono text-ash hover:text-snow transition-colors cursor-pointer"
+            title="Start New Chat (Clear previous messages)"
+          >
+            <Plus className="w-3.5 h-3.5 text-blue-cornflower" />
+            <span>New Chat</span>
+          </button>
+
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-md hover:bg-card-carbon text-ash hover:text-snow transition-colors cursor-pointer"
+            title="Close Terminal Chat"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
